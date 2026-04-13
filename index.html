@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ted Solomon — Product Manager, Builder</title>
+<meta name="description" content="Ted Solomon — Product Manager at Beck Technology. Former construction estimator turned PM. I ship software people actually want to use.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ted<span>.</span></a>
+  <ul class="nav-links">
+    <li><a href="about.html">About</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="blog/index.html">Blog</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <button class="nav-toggle" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">Product Manager &amp; Builder</div>
+  <h1>Ted Solomon</h1>
+  <p class="hero-subtitle">Product Manager who builds things — at work, on the side, and from scratch.</p>
+  <p class="hero-description">Currently at Beck Technology. Former estimator and project engineer turned PM. I bring real-world domain expertise into product development and ship software people actually want to use.</p>
+  <div class="hero-cta">
+    <a href="#projects" class="btn-primary">View Projects</a>
+    <a href="/contact.html" class="btn-secondary">Get in Touch</a>
+  </div>
+</section>
+
+<div class="divider"><hr></div>
+
+<section class="bio" id="about">
+  <div class="bio-label">About</div>
+  <div class="bio-content">
+    <p>I started my career in heavy civil construction — five years as an estimator and project engineer before making the jump to tech. I spent three and a half years in implementation working directly with users, then earned my way into product management.</p>
+    <p>That path gave me something I carry into every product role: I know how to talk to users, understand their problems deeply, and translate that into software that actually solves them. The industry may change — the approach doesn't.</p>
+    <div class="bio-stats">
+      <div class="stat">
+        <div class="stat-number">8+</div>
+        <div class="stat-label">Years in Industry<br>& Enterprise Software</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">2</div>
+        <div class="stat-label">Products Shipped<br>Outside of Work</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><hr></div>
+
+<section class="projects" id="projects">
+  <div class="section-header">
+    <div class="section-label">Projects</div>
+    <h2 class="section-title">Things I've Built</h2>
+  </div>
+  <div class="project-grid">
+    <a href="#" class="project-card">
+      <div class="project-type">Newsletter</div>
+      <div class="project-name">Vision Quest</div>
+      <p class="project-desc">A weekly tech newsletter that breaks down AI, hardware, and emerging tech for people who want to stay informed without the jargon. I co-founded it and handle the product side — reader analytics, content strategy, growth.</p>
+      <div class="project-tags">
+        <span class="tag">Beehiiv</span>
+        <span class="tag">Product Strategy</span>
+        <span class="tag">Growth</span>
+      </div>
+    </a>
+    <a href="#" class="project-card">
+      <div class="project-type">Mobile App</div>
+      <div class="project-name">Catalyft</div>
+      <p class="project-desc">A mobile productivity and goal-tracking app designed to help people stay focused on what matters. Built from the ground up as a side project — currently heading to the App Store.</p>
+      <div class="project-tags">
+        <span class="tag">iOS</span>
+        <span class="tag">Mobile App</span>
+        <span class="tag">Product Design</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<div class="divider"><hr></div>
+
+<section class="footer-section" id="contact">
+  <div class="section-label">Connect</div>
+  <div class="footer-content">
+    <h2>Let's talk.</h2>
+    <p>Interested in product management, building something cool, or just want to connect — I'm always up for a conversation.</p>
+    <div class="social-links">
+      <a href="#">LinkedIn</a>
+      <a href="#">Twitter / X</a>
+      <a href="#">Instagram</a>
+      <a href="#">Email</a>
+    </div>
+  </div>
+</section>
+
+<div class="footer-bottom">
+  <span>&copy; 2026 Ted Solomon</span>
+  <span>Built with care, not a template.</span>
+</div>
+
+<script>
+  const toggle = document.querySelector('.nav-toggle');
+  const navLinks = document.querySelector('.nav-links');
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('open');
+    navLinks.classList.toggle('open');
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    toggle.classList.remove('open');
+    navLinks.classList.remove('open');
+  }));
+</script>
+
+</body>
+</html>

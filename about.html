@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — Ted Solomon</title>
+<meta name="description" content="About Ted Solomon — Product Manager and builder. From heavy civil construction to enterprise software implementation to product management.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ted<span>.</span></a>
+  <ul class="nav-links">
+    <li><a href="about.html" class="active">About</a></li>
+    <li><a href="index.html#projects">Projects</a></li>
+    <li><a href="blog/index.html">Blog</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <button class="nav-toggle" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+</nav>
+
+<div class="page-hero">
+  <div class="page-hero-tag">About Me</div>
+  <h1>The longer story.</h1>
+  <p>I didn't take the typical path into product. I think that's made me a better PM.</p>
+</div>
+
+<div class="divider"><hr></div>
+
+<section class="about-bio">
+  <div class="section-label">Background</div>
+  <div class="about-bio-content">
+    <p class="lead">"The best product people I've ever met didn't start in product."</p>
+    <p>I spent five years in heavy civil construction — first as an estimator, then as a project engineer. I built bid packages for complex infrastructure projects, coordinated field teams, managed subcontractor relationships, and got comfortable operating under real pressure with real stakes. Construction taught me to prioritize ruthlessly, communicate clearly, and make decisions with incomplete information. It turns out those skills translate well to product management.</p>
+    <p>In 2020, I made the jump to tech when I joined Beck Technology. I came in on the implementation side, working directly with enterprise customers — construction companies navigating digital transformation — as they adopted new estimating software. For three and a half years, I sat with users, watched them struggle, and translated their frustrations into the product feedback that actually gets things fixed. I built genuine relationships with the people whose jobs depended on getting this software right.</p>
+    <p>That experience gave me something most PMs don't have: I know what bad UX looks like when someone's livelihood is on the line. I know the difference between a feature request that sounds good in a meeting and one that would actually change someone's day. And I know how to earn trust with users who are skeptical of technology — because I used to be in their world.</p>
+    <p>In 2023, I transitioned into product management. Now I own the roadmap, drive discovery, and work with engineering to ship features that directly impact how construction companies estimate projects. I'm still in the room with customers as often as I can be. The domain knowledge doesn't hurt either.</p>
+    <p>Outside of work, I co-founded Vision Quest — a weekly tech newsletter for curious professionals — and I'm building Catalyft, a mobile goal-tracking app headed to the App Store. I believe the best products come from people who care enough to understand the problem before they try to solve it.</p>
+  </div>
+</section>
+
+<div class="divider"><hr></div>
+
+<section class="timeline">
+  <div class="section-label">Career</div>
+  <div class="timeline-entries">
+
+    <div class="timeline-entry">
+      <div class="timeline-period">2015 – 2020</div>
+      <div class="timeline-role">Estimator &amp; Project Engineer</div>
+      <div class="timeline-company">Heavy Civil Construction</div>
+      <p class="timeline-desc">Spent five years in the field and the office — building detailed cost estimates for large-scale infrastructure projects, managing subcontractor bids, and supporting project teams through construction. Developed a deep appreciation for how decisions made on paper translate (or don't) to what actually happens on the ground. Learned to communicate across every level of an organization, from owners to operators.</p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-period">2020 – 2023</div>
+      <div class="timeline-role">Implementation Consultant</div>
+      <div class="timeline-company">Beck Technology</div>
+      <p class="timeline-desc">Joined Beck Technology as an implementation specialist and worked hands-on with enterprise construction customers to onboard, configure, and train on construction estimating software. Ran onboarding programs, managed data migrations, facilitated training workshops, and acted as the primary bridge between users and the product team. Built a systematic, user-grounded understanding of where software falls short — and why it matters.</p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-period">2023 – Present</div>
+      <div class="timeline-role">Product Manager</div>
+      <div class="timeline-company">Beck Technology</div>
+      <p class="timeline-desc">Transitioned into product management and now own the roadmap for a construction estimating platform used by hundreds of companies nationwide. Drive continuous discovery with customers, prioritize the backlog, write requirements, and partner with engineering to ship. The domain expertise from construction and implementation isn't background noise — it's the foundation everything else is built on.</p>
+    </div>
+
+  </div>
+</section>
+
+<div class="footer-bottom">
+  <span>&copy; 2026 Ted Solomon</span>
+  <span>Built with care, not a template.</span>
+</div>
+
+<script>
+  const toggle = document.querySelector('.nav-toggle');
+  const navLinks = document.querySelector('.nav-links');
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('open');
+    navLinks.classList.toggle('open');
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    toggle.classList.remove('open');
+    navLinks.classList.remove('open');
+  }));
+</script>
+
+</body>
+</html>
