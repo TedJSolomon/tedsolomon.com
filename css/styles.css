@@ -300,33 +300,48 @@ nav {
   animation-delay: 0.8s;
 }
 
-/* Decorative grid lines */
-.hero::before {
-  content: '';
+/* Hero decorative graphic */
+.hero-graphic {
   position: absolute;
   top: 50%;
-  right: 0;
+  right: -20px;
   transform: translateY(-50%);
-  width: 350px;
-  height: 350px;
-  border: 1px solid var(--border);
-  opacity: 0.4;
-  animation: fadeIn 1.5s ease forwards;
+  width: 420px;
+  height: 420px;
+  pointer-events: none;
+  opacity: 0;
+  animation: fadeInGraphic 1.5s ease forwards;
   animation-delay: 1s;
 }
 
-.hero::after {
-  content: '';
-  position: absolute;
-  top: calc(50% + 30px);
-  right: 30px;
-  transform: translateY(-50%);
-  width: 350px;
-  height: 350px;
-  border: 1px solid var(--border-accent);
-  opacity: 0.3;
-  animation: fadeIn 1.5s ease forwards;
-  animation-delay: 1.2s;
+/* Hero social icons */
+.hero-social {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  margin-top: 2rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards;
+  animation-delay: 1s;
+}
+
+.hero-social a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.3s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.hero-social a:hover {
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.hero-social svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 /* ============================================================
@@ -468,6 +483,47 @@ nav {
 }
 
 /* ============================================================
+   PROJECTS PAGE — FULL SECTIONS
+   ============================================================ */
+.project-full {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 5rem 3rem;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+.project-full + .project-full {
+  border-top: 1px solid var(--border);
+}
+
+.project-full-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  color: var(--text-bright);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+
+.project-full-desc {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--text);
+  max-width: 600px;
+  margin-bottom: 1.75rem;
+}
+
+.project-full-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+/* ============================================================
    HOMEPAGE — CONNECT / FOOTER SECTION
    ============================================================ */
 .footer-section {
@@ -495,7 +551,7 @@ nav {
 }
 
 /* ============================================================
-   SOCIAL LINKS (shared)
+   SOCIAL LINKS (homepage connect section)
    ============================================================ */
 .social-links {
   display: flex;
@@ -515,6 +571,33 @@ nav {
 
 .social-links a:hover {
   color: var(--accent);
+}
+
+/* ============================================================
+   FOOTER SOCIAL ICONS (shared across all pages)
+   ============================================================ */
+.footer-social {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.footer-social a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.footer-social a:hover {
+  color: var(--accent);
+}
+
+.footer-social svg {
+  width: 15px;
+  height: 15px;
+  display: block;
 }
 
 /* ============================================================
@@ -538,7 +621,7 @@ nav {
 }
 
 /* ============================================================
-   PAGE HERO (inner pages — about, contact, blog)
+   PAGE HERO (inner pages)
    ============================================================ */
 .page-hero {
   padding: 9rem 3rem 4rem;
@@ -579,7 +662,7 @@ nav {
 }
 
 /* ============================================================
-   ABOUT — EXTENDED BIO
+   ABOUT — BIO
    ============================================================ */
 .about-bio {
   max-width: 1200px;
@@ -589,6 +672,55 @@ nav {
   grid-template-columns: 200px 1fr;
   gap: 4rem;
   align-items: start;
+}
+
+.about-bio-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Photo placeholder */
+.photo-placeholder {
+  width: 100%;
+  aspect-ratio: 4/5;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.photo-placeholder::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: -8px;
+  bottom: -8px;
+  border: 1px solid var(--border-accent);
+  pointer-events: none;
+}
+
+.photo-placeholder svg {
+  width: 36px;
+  height: 36px;
+  color: var(--text-dim);
+  opacity: 0.2;
+}
+
+.photo-placeholder-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  opacity: 0.35;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .about-bio-content .lead {
@@ -787,109 +919,6 @@ nav {
 }
 
 /* ============================================================
-   BLOG — LISTING PAGE
-   ============================================================ */
-.blog-listing {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 4rem 3rem 8rem;
-}
-
-.blog-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  margin-top: 3rem;
-}
-
-.blog-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  padding: 2rem 2.5rem;
-  transition: all 0.4s ease;
-  position: relative;
-  overflow: hidden;
-  text-decoration: none;
-  display: block;
-}
-
-.blog-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent), transparent);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.blog-card:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-accent);
-  transform: translateY(-2px);
-}
-
-.blog-card:hover::before {
-  opacity: 1;
-}
-
-.blog-card-meta {
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.blog-card-date {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.blog-card-category {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-}
-
-.blog-card-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.5rem;
-  color: var(--text-bright);
-  margin-bottom: 0.6rem;
-  letter-spacing: -0.01em;
-  line-height: 1.25;
-}
-
-.blog-card-excerpt {
-  font-size: 0.95rem;
-  color: var(--text-dim);
-  line-height: 1.7;
-  max-width: 640px;
-}
-
-.blog-card-read {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  margin-top: 1rem;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.blog-card:hover .blog-card-read {
-  opacity: 1;
-}
-
-/* ============================================================
    BLOG — COMING SOON
    ============================================================ */
 .coming-soon {
@@ -947,6 +976,11 @@ nav {
   to { opacity: 0.4; }
 }
 
+@keyframes fadeInGraphic {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* ============================================================
    RESPONSIVE
    ============================================================ */
@@ -979,37 +1013,42 @@ nav {
 
   /* Hero */
   .hero { padding: 7rem 1.5rem 3rem; }
-  .hero::before, .hero::after { display: none; }
+  .hero-graphic { display: none; }
   .hero-cta { flex-direction: column; }
   .hero-cta a { text-align: center; }
+  .hero-social { gap: 1rem; }
 
   /* Bio */
   .bio { grid-template-columns: 1fr; gap: 1rem; padding: 4rem 1.5rem; }
   .bio-stats { gap: 2rem; flex-wrap: wrap; }
 
-  /* Projects */
+  /* Projects (homepage) */
   .projects { padding: 4rem 1.5rem; }
   .project-grid { grid-template-columns: 1fr; }
+
+  /* Projects page */
+  .project-full { grid-template-columns: 1fr; gap: 1.5rem; padding: 3rem 1.5rem; }
+  .project-full + .project-full { padding-top: 3rem; }
 
   /* Homepage footer section */
   .footer-section { grid-template-columns: 1fr; gap: 1rem; padding: 4rem 1.5rem; }
 
   /* Site footer */
-  .footer-bottom { padding: 2rem 1.5rem; flex-direction: column; gap: 0.5rem; text-align: center; }
+  .footer-bottom { padding: 2rem 1.5rem; flex-direction: column; gap: 1rem; text-align: center; }
+  .footer-social { gap: 1rem; }
 
   /* Page hero */
   .page-hero { padding: 7rem 1.5rem 3rem; }
 
   /* About */
   .about-bio { grid-template-columns: 1fr; gap: 1.5rem; padding: 3rem 1.5rem 4rem; }
+  .about-bio-left { flex-direction: row; align-items: flex-start; flex-wrap: wrap; }
+  .photo-placeholder { width: 140px; flex-shrink: 0; }
+  .photo-placeholder::after { display: none; }
   .timeline { grid-template-columns: 1fr; gap: 1.5rem; padding: 1.5rem 1.5rem 5rem; }
 
   /* Contact */
   .contact-section { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 1.5rem 5rem; }
   .contact-link { gap: 1rem; }
   .contact-link:hover { transform: none; }
-
-  /* Blog */
-  .blog-listing { padding: 2rem 1.5rem 5rem; }
-  .blog-card { padding: 1.5rem; }
 }
