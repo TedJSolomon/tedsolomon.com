@@ -13,7 +13,17 @@
       "Bash(npm exec *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/dashboard/wins)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" -H \"Cookie: auth-token=changeme\" http://localhost:3000/dashboard/wins)",
-      "Bash(curl -s -H \"Cookie: auth-token=changeme\" http://localhost:3000/dashboard/wins)"
+      "Bash(curl -s -H \"Cookie: auth-token=changeme\" http://localhost:3000/dashboard/wins)",
+      "Bash(node *)",
+      "Bash(curl *)",
+      "Bash(lsof -ti:3000)",
+      "Bash(npx next *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(json.dumps\\({k:v for k,v in r.items\\(\\) if k in ['wins','losses','gamesBack','divisionRank','leagueRecord','team']}, indent=2\\)\\) for rec in d['records'] for r in rec['teamRecords'] if r['team']['id']==121]\")",
+      "Bash(python3 -c \" import json,sys d=json.load\\(sys.stdin\\) games=[] for date in d.get\\('dates',[]\\): for g in date.get\\('games',[]\\): games.append\\({'date':date['date'],'state':g['status']['abstractGameState'],'detailed':g['status']['detailedState'],'away':g['teams']['away']['team']['name'],'home':g['teams']['home']['team']['name'],'awayScore':g['teams']['away'].get\\('score'\\),'homeScore':g['teams']['home'].get\\('score'\\),'gameDate':g['gameDate']}\\) print\\(json.dumps\\(games, indent=2\\)\\) \")",
+      "Bash(python3 -m json.tool)",
+      "Bash(kill %1)",
+      "Bash(grep -v \"node_modules\\\\|^$\")",
+      "Bash(pkill -f \"next dev\")"
     ]
   }
 }

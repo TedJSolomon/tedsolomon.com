@@ -1,61 +1,54 @@
-import fs from 'fs';
-import path from 'path';
+import { createServerClient } from './supabase';
 
-export const WINS_DIR = path.join(process.cwd(), 'content/wins');
+// ── Shape helpers ────────────────────────────────────────────
 
-export function ensureWinsDir() {
-  if (!fs.existsSync(WINS_DIR)) fs.mkdirSync(WINS_DIR, { recursive: true });
-}
-
-// Minimal frontmatter parser — handles simple key: value lines
-function parseFrontmatter(raw) {
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!match) return { data: {}, body: raw.trim() };
-  const data = {};
-  for (const line of match[1].split('\n')) {
-    const colon = line.indexOf(':');
-    if (colon === -1) continue;
-    const key = line.slice(0, colon).trim();
-    const val = line.slice(colon + 1).trim();
-    if (key) data[key] = val;
+/** Convert a DB row into the win shape used throughout the UI. */
+function rowToWin(row) {
+  // Reconstruct the combined impact string the UI expects
+  let impact = '';
+  if (row.impact_metric_type && row.impact_metric_value) {
+    impact = row.impact_metric_type === 'Custom'
+      ? row.impact_metric_value
+      : `${row.impact_metric_type}: ${row.impact_metric_value}`;
   }
-  return { data, body: match[2].trim() };
+  return {
+    id: row.id,
+    date: row.date,           // 'YYYY-MM-DD'
+    category: row.category,
+    tags: row.tags || [],
+    visibility: row.visibility,
+    impact,
+    description: row.description,
+  };
 }
 
-export function slugify(str) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .slice(0, 40)
-    .replace(/-+$/, '') || 'win';
+/** Parse the combined impact string back into type + value for DB writes. */
+export function splitImpact(impact) {
+  if (!impact) return { impact_metric_type: null, impact_metric_value: null };
+  const colonIdx = impact.indexOf(': ');
+  if (colonIdx === -1) {
+    return { impact_metric_type: 'Custom', impact_metric_value: impact };
+  }
+  return {
+    impact_metric_type: impact.slice(0, colonIdx),
+    impact_metric_value: impact.slice(colonIdx + 2),
+  };
 }
 
-export function getAllWins() {
-  ensureWinsDir();
-  const files = fs
-    .readdirSync(WINS_DIR)
-    .filter((f) => f.endsWith('.md'))
-    .sort()
-    .reverse(); // YYYY-MM-DD prefix → newest first
+// ── Data fetching ────────────────────────────────────────────
 
-  return files.map((filename) => {
-    const raw = fs.readFileSync(path.join(WINS_DIR, filename), 'utf8');
-    const { data, body } = parseFrontmatter(raw);
-    return {
-      filename,
-      date: data.date || '',
-      category: data.category || '',
-      tags: data.tags
-        ? data.tags.split(',').map((t) => t.trim()).filter(Boolean)
-        : [],
-      visibility: data.visibility || '',
-      impact: data.impact || '',
-      description: body,
-    };
-  });
+export async function getAllWins() {
+  const supabase = createServerClient();
+  const { data, error } = await supabase
+    .from('wins')
+    .select('*')
+    .order('date', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(`getAllWins: ${error.message}`);
+  return (data || []).map(rowToWin);
 }
+
+// ── Pure JS helpers (operate on already-fetched win arrays) ──
 
 export function filterWins(wins, { from, to, category, visibility, tag } = {}) {
   return wins.filter((w) => {
@@ -68,14 +61,12 @@ export function filterWins(wins, { from, to, category, visibility, tag } = {}) {
   });
 }
 
-// Collect every unique tag across all wins
 export function getAllTags(wins) {
   const set = new Set();
   wins.forEach((w) => w.tags.forEach((t) => set.add(t)));
   return [...set].sort();
 }
 
-// { shipped: 2, learned: 1, ... }
 export function getCategoryCounts(wins) {
   const counts = {};
   wins.forEach((w) => {
@@ -84,7 +75,6 @@ export function getCategoryCounts(wins) {
   return counts;
 }
 
-// [{ tag: 'api', count: 3 }, ...] sorted desc, top N
 export function getTopTagCounts(wins, n = 10) {
   const counts = {};
   wins.forEach((w) => w.tags.forEach((t) => { counts[t] = (counts[t] || 0) + 1; }));
@@ -94,7 +84,6 @@ export function getTopTagCounts(wins, n = 10) {
     .slice(0, n);
 }
 
-// { 'Time Saved': 2, 'Revenue Impact': 1, ... } — only types actually used
 export function getImpactTypeCounts(wins) {
   const counts = {};
   wins.forEach((w) => {

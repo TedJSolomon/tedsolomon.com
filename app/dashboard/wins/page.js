@@ -22,7 +22,7 @@ export default async function WinsPage({ searchParams }) {
   const visibility = sp?.visibility || '';
   const tag        = sp?.tag        || '';
 
-  const allWins  = getAllWins();
+  const allWins  = await getAllWins();
   const filtered = filterWins(allWins, { from, to, category, visibility, tag });
   const allTags  = getAllTags(allWins);
 
@@ -76,7 +76,7 @@ export default async function WinsPage({ searchParams }) {
       ) : (
         <div className="wins-grid">
           {filtered.map((win) => (
-            <WinCard key={win.filename} win={win} existingTags={allTags} />
+            <WinCard key={win.id} win={win} existingTags={allTags} />
           ))}
         </div>
       )}

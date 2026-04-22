@@ -21,7 +21,7 @@ export default function WinEditModal({ win, existingTags, onClose }) {
   const [metricType, setMetricType] = useState(initType);
   const [metricValue, setMetricValue] = useState(initValue);
 
-  const boundAction = updateWin.bind(null, win.filename);
+  const boundAction = updateWin.bind(null, win.id);
   const [state, formAction, pending] = useActionState(boundAction, {});
 
   // Close on success

@@ -24,7 +24,7 @@ export default async function ExportPage({ searchParams }) {
   const to = sp?.to || '';
   const visibility = sp?.visibility || '';
 
-  const allWins = getAllWins();
+  const allWins = await getAllWins();
   const wins = filterWins(allWins, { from, to, visibility });
 
   // Group by category in a defined order
@@ -102,7 +102,7 @@ export default async function ExportPage({ searchParams }) {
               <div className="export-category-label">{CATEGORY_LABELS[cat]}</div>
               <ul className="export-list">
                 {grouped[cat].map((win) => (
-                  <li key={win.filename} className="export-item">
+                  <li key={win.id} className="export-item">
                     <div className="export-item-header">
                       <span className="export-item-date">{formatDate(win.date)}</span>
                       {win.visibility !== 'both' && (

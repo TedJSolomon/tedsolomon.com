@@ -29,7 +29,7 @@ export default function WinCard({ win, existingTags }) {
 
   function handleDelete() {
     if (!confirm('Delete this win? This cannot be undone.')) return;
-    startDelete(() => deleteWin(win.filename));
+    startDelete(() => deleteWin(win.id));
   }
 
   const { type: impactType, value: impactValue } = parseImpact(win.impact);
