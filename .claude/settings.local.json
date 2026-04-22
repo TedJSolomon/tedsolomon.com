@@ -23,7 +23,8 @@
       "Bash(python3 -m json.tool)",
       "Bash(kill %1)",
       "Bash(grep -v \"node_modules\\\\|^$\")",
-      "Bash(pkill -f \"next dev\")"
+      "Bash(pkill -f \"next dev\")",
+      "Bash(git add *)"
     ]
   }
 }

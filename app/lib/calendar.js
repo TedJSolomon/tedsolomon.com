@@ -31,18 +31,30 @@ export async function fetchCalendarEvents() {
     const token = await getValidAccessToken();
     if (!token) return { connected: false };
 
-    // Build time windows in NY timezone
-    const now   = new Date();
-    const nyNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const now = new Date();
 
-    const todayStart = new Date(nyNow);
-    todayStart.setHours(0, 0, 0, 0);
+    // Format a Date as YYYY-MM-DD in America/New_York (en-CA gives ISO date format)
+    const nyDateStr = (d) =>
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(d);
 
-    const tomorrowStart = new Date(todayStart);
-    tomorrowStart.setDate(todayStart.getDate() + 1);
+    const todayDateStr    = nyDateStr(now);
+    const tomorrowDateStr = nyDateStr(new Date(now.getTime() + 24 * 3_600_000));
 
-    const tomorrowEnd = new Date(tomorrowStart);
-    tomorrowEnd.setDate(tomorrowStart.getDate() + 1);
+    // Convert a YYYY-MM-DD string to the UTC Date that equals midnight in America/New_York.
+    // Strategy: start from UTC midnight of that calendar date, then find how many hours NY
+    // is behind UTC at that moment (19 for EST, 20 for EDT), and advance by that offset.
+    function nyMidnightUTC(isoDate) {
+      const [y, m, d] = isoDate.split('-').map(Number);
+      const base = new Date(Date.UTC(y, m - 1, d));
+      const nyHour = +new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', hour: 'numeric', hour12: false,
+      }).format(base);
+      return new Date(base.getTime() + (24 - nyHour) * 3_600_000);
+    }
+
+    const todayStart  = nyMidnightUTC(todayDateStr);
+    // End = midnight ending tomorrow (start of day-after-tomorrow in NY)
+    const tomorrowEnd = nyMidnightUTC(nyDateStr(new Date(now.getTime() + 48 * 3_600_000)));
 
     const params = new URLSearchParams({
       timeMin:      todayStart.toISOString(),
@@ -54,11 +66,10 @@ export async function fetchCalendarEvents() {
 
     const res = await fetch(`${BASE}/calendars/primary/events?${params}`, {
       headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store', // page is force-dynamic; user-specific data
+      cache: 'no-store',
     });
 
     if (res.status === 401) {
-      // Token revoked — clear and signal not connected
       await deleteTokens();
       return { connected: false };
     }
@@ -75,7 +86,8 @@ export async function fetchCalendarEvents() {
       const isAllDay  = !!ev.start?.date;
       const startIso  = ev.start?.dateTime ?? ev.start?.date;
       const endIso    = ev.end?.dateTime   ?? ev.end?.date;
-      const startDate = new Date(startIso).toLocaleDateString('en-US', { timeZone: 'America/New_York' });
+      // Use en-CA (YYYY-MM-DD) to match todayDateStr / tomorrowDateStr
+      const startDate = new Date(startIso).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
       return {
         id:       ev.id,
         title:    ev.summary ?? '(No title)',
@@ -90,15 +102,11 @@ export async function fetchCalendarEvents() {
       };
     }
 
-    const todayDateStr    = todayStart.toLocaleDateString('en-US', { timeZone: 'America/New_York' });
-    const tomorrowDateStr = tomorrowStart.toLocaleDateString('en-US', { timeZone: 'America/New_York' });
-
     const today    = items.map(mapEvent).filter((e) => e.startDate === todayDateStr);
     const tomorrow = items.map(mapEvent).filter((e) => e.startDate === tomorrowDateStr);
 
     return { connected: true, today, tomorrow };
   } catch (err) {
-    // If this is a Supabase table-missing error, treat as not connected
     const msg = err?.message ?? String(err);
     if (msg.includes('does not exist') || msg.includes('no rows')) {
       return { connected: false };
