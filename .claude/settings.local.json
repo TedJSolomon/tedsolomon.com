@@ -24,7 +24,11 @@
       "Bash(kill %1)",
       "Bash(grep -v \"node_modules\\\\|^$\")",
       "Bash(pkill -f \"next dev\")",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(vercel *)",
+      "Bash(git log *)"
     ]
   }
 }

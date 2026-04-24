@@ -30,9 +30,34 @@ function formatDate() {
 
 // ── Goal progress ───────────────────────────────────────────
 function goalPct(goal) {
+  if (goal.measure_type && goal.measure_type !== 'Yes/No') {
+    const cur = Number(goal.current_value ?? 0);
+    const tgt = Number(goal.target_value  ?? 0);
+    return tgt > 0 ? Math.min(100, Math.round((cur / tgt) * 100)) : 0;
+  }
+  if (goal.measure_type === 'Yes/No') {
+    return (goal.current_value ?? 0) >= 1 ? 100 : 0;
+  }
   const subs = goal.subtasks || [];
   if (!subs.length) return 0;
   return Math.round(subs.filter((s) => s.completed).length / subs.length * 100);
+}
+
+function goalMetricLabel(goal) {
+  if (!goal.measure_type) return null;
+  const cur  = Number(goal.current_value ?? 0);
+  const tgt  = Number(goal.target_value  ?? 0);
+  const unit = goal.measure_unit || '';
+  switch (goal.measure_type) {
+    case 'Yes/No':        return (goal.current_value ?? 0) >= 1 ? 'Achieved' : 'In progress';
+    case 'Percentage':    return `${cur}% / ${tgt}%`;
+    case 'Currency ($)':  return `$${cur.toLocaleString()} / $${tgt.toLocaleString()}`;
+    case 'Hours':         return `${cur}h / ${tgt}h`;
+    case 'Weight (lbs)':  return `${cur} / ${tgt} lbs`;
+    case 'Count (each)':  return unit ? `${cur} / ${tgt} ${unit}` : `${cur} / ${tgt}`;
+    case 'Custom':        return unit ? `${cur} / ${tgt} ${unit}` : `${cur} / ${tgt}`;
+    default:              return null;
+  }
 }
 
 // ── Quote ───────────────────────────────────────────────────
@@ -158,22 +183,33 @@ export default async function DashboardOverview() {
           ) : (
             <div className="bento-goals-list">
               {activeGoals.map((goal) => {
-                const color = CATEGORY_COLORS[goal.category] || CATEGORY_COLORS.Other;
-                const subs  = goal.subtasks || [];
-                const done  = subs.filter((s) => s.completed).length;
+                const color  = CATEGORY_COLORS[goal.category] || CATEGORY_COLORS.Other;
+                const subs   = goal.subtasks || [];
+                const done   = subs.filter((s) => s.completed).length;
+                const metric = goalMetricLabel(goal);
+                const pct    = goal.pct;
                 return (
                   <div key={goal.id} className="bento-goal-item">
                     <div className="bento-goal-meta">
                       <span className="bento-goal-title">{goal.title}</span>
-                      <span className="bento-goal-pct">{goal.pct}%</span>
+                      {metric ? (
+                        <span className="bento-goal-metric">{metric}</span>
+                      ) : (
+                        <span className="bento-goal-pct">{pct}%</span>
+                      )}
                     </div>
                     <div className="bento-goal-track">
                       <div className="bento-goal-fill"
-                        style={{ width: `${goal.pct > 0 ? Math.max(goal.pct, 3) : 0}%`, background: color.bg }} />
+                        style={{ width: `${pct > 0 ? Math.max(pct, 3) : 0}%`, background: color.bg }} />
                     </div>
                     <div className="bento-goal-sub">
                       <span className="bento-goal-cat" style={{ color: color.bg }}>{goal.category}</span>
-                      <span className="bento-goal-subs">{done}/{subs.length} subtasks</span>
+                      {subs.length > 0 && (
+                        <span className="bento-goal-subs">{done}/{subs.length} subtasks</span>
+                      )}
+                      {metric && pct > 0 && subs.length === 0 && (
+                        <span className="bento-goal-subs">{pct}%</span>
+                      )}
                     </div>
                   </div>
                 );

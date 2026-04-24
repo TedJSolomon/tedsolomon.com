@@ -6,6 +6,16 @@ export const CATEGORIES = [
 
 export const STATUSES = ['active', 'completed', 'paused', 'cancelled'];
 
+export const MEASURE_TYPES = [
+  'Yes/No',
+  'Count (each)',
+  'Percentage',
+  'Currency ($)',
+  'Hours',
+  'Weight (lbs)',
+  'Custom',
+];
+
 export const CATEGORY_COLORS = {
   Career:        { bg: '#e8a838', rgb: '232,168,56'  },
   Learning:      { bg: '#7eb8f7', rgb: '126,184,247' },

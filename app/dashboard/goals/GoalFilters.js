@@ -4,22 +4,33 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { CATEGORIES, STATUSES } from '../../lib/goals';
 
-export default function GoalFilters({ filters }) {
+export default function GoalFilters({ filters, view }) {
   const router   = useRouter();
   const pathname = usePathname();
   const [local, setLocal] = useState(filters);
 
-  function apply() {
+  function buildParams(overrides = {}) {
+    const merged = { ...local, ...overrides };
     const params = new URLSearchParams();
-    if (local.category) params.set('category', local.category);
-    if (local.status)   params.set('status',   local.status);
-    if (local.search)   params.set('search',   local.search);
-    router.push(`${pathname}?${params.toString()}`);
+    if (merged.category)           params.set('category', merged.category);
+    if (merged.status)             params.set('status',   merged.status);
+    if (merged.search)             params.set('search',   merged.search);
+    if (view && view !== 'grid')   params.set('view',     view);
+    return params.toString();
+  }
+
+  function apply() {
+    const qs = buildParams();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
   }
 
   function clear() {
-    setLocal({ category: '', status: '', search: '' });
-    router.push(pathname);
+    const cleared = { category: '', status: '', search: '' };
+    setLocal(cleared);
+    const params = new URLSearchParams();
+    if (view && view !== 'grid') params.set('view', view);
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
   }
 
   const hasActive = Object.values(local).some(Boolean);

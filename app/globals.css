@@ -2716,10 +2716,11 @@ nav.site-nav {
 
 .goal-progress-bar {
   flex: 1;
+  position: relative;
   height: 5px;
   background: var(--border);
   border-radius: 3px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .goal-progress-fill {
@@ -2728,6 +2729,19 @@ nav.site-nav {
   border-radius: 3px;
   transition: width 0.3s ease;
   min-width: 0;
+}
+
+/* Threshold tick mark on a progress bar */
+.goal-progress-threshold-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: rgba(255,255,255,0.55);
+  border-radius: 1px;
+  transform: translateX(-50%);
+  cursor: help;
+  pointer-events: auto;
 }
 
 .goal-progress-label {
@@ -2802,10 +2816,18 @@ nav.site-nav {
   transition: background 0.15s, opacity 0.15s;
 }
 
+.goal-subtask-row.measure { align-items: flex-start; }
+
 .goal-subtask-row:hover     { background: rgba(255,255,255,0.06); }
 .goal-subtask-row.dragging  { opacity: 0.4; cursor: grabbing; }
 .goal-subtask-row.drag-over { background: rgba(var(--cat-rgb, 232,168,56), 0.1); border-color: var(--cat, #e8a838); }
 .goal-subtask-row.completed { opacity: 0.5; }
+
+/* Left flex region — replaces bare .goal-subtask-check as direct child */
+.goal-subtask-left {
+  flex: 1;
+  min-width: 0;
+}
 
 .goal-subtask-check {
   display: flex;
@@ -2815,6 +2837,69 @@ nav.site-nav {
   flex: 1;
   min-width: 0;
 }
+
+/* Measure-type subtask layout */
+.goal-subtask-measure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.goal-subtask-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.goal-subtask-progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--cat, #e8a838);
+  white-space: nowrap;
+}
+
+.goal-subtask-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.goal-subtask-step-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.goal-subtask-step-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); color: var(--text); }
+.goal-subtask-step-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.goal-subtask-value-input {
+  width: 52px;
+  height: 22px;
+  font-size: 0.75rem;
+  padding: 0 0.35rem;
+  text-align: center;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.goal-subtask-value-input:focus { outline: none; border-color: var(--cat, #e8a838); }
+.goal-subtask-value-input::-webkit-outer-spin-button,
+.goal-subtask-value-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.goal-subtask-value-input[type=number] { -moz-appearance: textfield; }
 
 .goal-subtask-check input[type="checkbox"] {
   width: 14px;
@@ -2857,13 +2942,19 @@ nav.site-nav {
   line-height: 1;
 }
 
-/* Add subtask form */
+/* Add subtask form — column layout */
 .goal-add-subtask-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.goal-add-subtask-row,
+.goal-add-subtask-bottom {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .goal-subtask-input {
@@ -2873,8 +2964,22 @@ nav.site-nav {
   padding: 0.45rem 0.65rem;
 }
 
+.goal-measure-select {
+  flex: 0 0 auto;
+  width: 138px;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.5rem;
+}
+
+.goal-measure-unit-input,
+.goal-target-input {
+  font-size: 0.8rem;
+  padding: 0.45rem 0.65rem;
+}
+
 .goal-subtask-date {
-  width: 140px;
+  flex: 1;
+  min-width: 100px;
   font-size: 0.8rem;
   padding: 0.45rem 0.65rem;
 }
@@ -2883,6 +2988,7 @@ nav.site-nav {
   font-size: 0.75rem;
   padding: 0.5rem 0.9rem;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .goal-subtask-err {
@@ -2947,6 +3053,17 @@ nav.site-nav {
   flex-shrink: 0;
 }
 
+.goal-builder-item-measure {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--cat, #e8a838);
+  flex-shrink: 0;
+}
+
+/* Measure-type selects inside builder */
+.goal-subtask-builder .goal-measure-select { width: 138px; font-size: 0.8rem; }
+.goal-subtask-builder .goal-target-input   { font-size: 0.8rem; }
+
 .goal-builder-remove {
   background: none;
   border: none;
@@ -2974,16 +3091,376 @@ nav.site-nav {
   flex-shrink: 0;
 }
 
+/* Goal metric bar (secondary bar shown when goal has a numeric measure) */
+.goal-metric-bar { margin-top: 0.25rem; }
+
+/* Goal metric section in expanded body */
+.goal-metric-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.goal-metric-update-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.goal-metric-threshold-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.63rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.goal-metric-yesno-check { margin-top: 0.1rem; }
+
+/* Note input — appears below +/- controls on metric items */
+.goal-note-row {
+  display: flex;
+  align-items: center;
+}
+
+.goal-note-input {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 0.28rem 0.55rem;
+  font-style: italic;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 5px;
+  color: var(--text-muted);
+  transition: border-color 0.15s, color 0.15s;
+}
+.goal-note-input::placeholder { color: var(--text-dim); opacity: 0.6; }
+.goal-note-input:focus {
+  outline: none;
+  border-color: rgba(var(--cat-rgb, 232,168,56), 0.35);
+  color: var(--text);
+}
+.goal-note-input:disabled { opacity: 0.4; }
+
+/* Progress history chart section */
+.goal-progress-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.goal-history-chart-wrap {
+  height: 200px;
+  position: relative;
+}
+
+.goal-history-loading {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  margin: 0 0 0.85rem;
+}
+
+/* Measurement section in goal form */
+.goal-measure-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.1rem;
+}
+
+/* Threshold input (alongside target value) */
+.goal-threshold-input {
+  font-size: 0.8rem;
+  padding: 0.45rem 0.65rem;
+}
+
+/* Mini progress bar on measure subtask rows */
+.goal-subtask-mini-wrap {
+  position: relative;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  margin-top: 0.25rem;
+}
+
+.goal-subtask-mini-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--cat, #e8a838);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  opacity: 0.7;
+}
+
+.goal-subtask-mini-threshold {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 1px;
+  transform: translateX(-50%);
+  cursor: help;
+}
+
+/* builder threshold badge */
+.goal-builder-item-threshold {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── View toggle ──────────────────────────────────────────── */
+.goal-view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.goal-view-btn {
+  background: none;
+  border: none;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.goal-view-btn + .goal-view-btn { border-left: 1px solid var(--border); }
+.goal-view-btn.active { background: rgba(232,168,56,0.12); color: #e8a838; font-weight: 500; }
+.goal-view-btn:hover:not(.active) { background: rgba(255,255,255,0.04); color: var(--text); }
+
+/* ── Timeline / Gantt ─────────────────────────────────────── */
+.goal-timeline {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.goal-tl-inner {
+  min-width: 620px;
+  padding: 0.9rem 1rem 0.75rem;
+}
+
+.goal-tl-axis-row {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.goal-tl-label-col {
+  width: 185px;
+  flex-shrink: 0;
+  padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.goal-tl-axis-col {
+  flex: 1;
+  position: relative;
+  height: 22px;
+}
+
+.goal-tl-tick {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.goal-tl-today-label {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: #e8a838;
+  font-weight: 600;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.goal-tl-row {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.goal-tl-row:last-of-type { border-bottom: none; }
+
+.goal-tl-title {
+  font-size: 0.83rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  line-height: 1.3;
+}
+
+.goal-tl-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.goal-tl-cat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.goal-tl-cat-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.goal-tl-track-col {
+  flex: 1;
+  position: relative;
+  height: 32px;
+}
+
+.goal-tl-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(232,168,56,0.35);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.goal-tl-bar-wrap {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  min-width: 4px;
+  z-index: 1;
+}
+
+.goal-tl-bar-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.goal-tl-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-radius: 4px;
+  opacity: 0.8;
+  max-width: 100%;
+  transition: width 0.3s ease;
+}
+
+.goal-tl-bar-label {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.8);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+  text-shadow: 0 0 4px rgba(0,0,0,0.6);
+}
+
+.goal-tl-legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.65rem;
+  margin-top: 0.1rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.goal-tl-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.goal-tl-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .goals-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 600px) {
-  .goal-add-subtask-form { flex-direction: column; align-items: stretch; }
-  .goal-subtask-date     { width: 100%; }
-  .goal-builder-inputs   { flex-direction: column; align-items: stretch; }
-  .goal-subtask-date     { width: 100%; }
+  .goal-add-subtask-row,
+  .goal-add-subtask-bottom { flex-direction: column; align-items: stretch; }
+  .goal-measure-select     { width: 100%; }
+  .goal-subtask-date       { width: 100%; }
+  .goal-builder-inputs     { flex-direction: column; align-items: stretch; }
+  .goal-metric-update-row  { flex-direction: column; align-items: flex-start; }
+  .goal-measure-section .ooo-top-row { flex-direction: column; }
+  .goal-view-toggle        { align-self: flex-start; }
+  .goal-tl-label-col       { width: 120px; }
+}
+
+/* ── Bento goal metric (overview widget) ──────────────────── */
+.bento-goal-metric {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #e8a838;
+  font-weight: 500;
+  flex-shrink: 0;
+  text-align: right;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ============================================================
