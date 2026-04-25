@@ -342,31 +342,27 @@ export default async function DashboardOverview() {
                 </div>
               )}
 
-              {mets.nextGame && (
-                <div className="bento-mets-row">
-                  <span className="bento-mets-row-label">Next</span>
-                  {mets.nextGame.isLive ? (
+              {mets.upcomingGames?.map((game, i) => (
+                <div key={i} className="bento-mets-row">
+                  <span className="bento-mets-row-label">{game.weekday}</span>
+                  {game.isLive ? (
                     <>
                       <span className="bento-live-badge">LIVE</span>
                       <span className="bento-mets-score">
-                        {mets.nextGame.liveScore?.mets}–{mets.nextGame.liveScore?.opp}
+                        {game.liveScore?.mets}–{game.liveScore?.opp}
                       </span>
-                      <span className="bento-mets-opp">
-                        {mets.nextGame.homeAway} {mets.nextGame.opponent}
-                      </span>
+                      <span className="bento-mets-opp">{game.homeAway} {game.opponent}</span>
                     </>
                   ) : (
                     <span className="bento-mets-next-info">
-                      {mets.nextGame.homeAway} {mets.nextGame.opponent}
-                      {mets.nextGame.time && (
-                        <span className="bento-mets-time"> · {mets.nextGame.time}</span>
-                      )}
+                      {game.homeAway} {game.opponent}
+                      <span className="bento-mets-time"> · {game.date} · {game.time}</span>
                     </span>
                   )}
                 </div>
-              )}
+              ))}
 
-              {!mets.lastGame && !mets.nextGame && (
+              {!mets.lastGame && !mets.upcomingGames?.length && (
                 <p className="bento-empty">No recent games found.</p>
               )}
 

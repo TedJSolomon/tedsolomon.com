@@ -5,16 +5,18 @@ function padDate(d) {
   return d.toISOString().slice(0, 10);
 }
 
-function fmtGameTime(iso) {
-  if (!iso) return null;
+// Returns separate weekday, date, and time strings for display
+function fmtGameParts(iso) {
+  if (!iso) return { weekday: '', date: '', time: '' };
   try {
     const d = new Date(iso);
-    const weekday = d.toLocaleString('en-US', { weekday: 'short', timeZone: 'America/New_York' });
-    const date    = d.toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' });
-    const time    = d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
-    return `${weekday}, ${date} · ${time} ET`;
+    return {
+      weekday: d.toLocaleString('en-US', { weekday: 'short', timeZone: 'America/New_York' }),
+      date:    d.toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' }),
+      time:    d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' }) + ' ET',
+    };
   } catch {
-    return null;
+    return { weekday: '', date: '', time: '' };
   }
 }
 
@@ -23,7 +25,6 @@ function shortName(fullName) {
   if (!fullName) return '';
   const words = fullName.split(' ');
   if (words.length <= 2) return fullName;
-  // Drop first word (city) if ≥ 3 words
   return words.slice(1).join(' ');
 }
 
@@ -31,7 +32,7 @@ export async function fetchMets() {
   try {
     const today  = new Date();
     const past   = new Date(today); past.setDate(today.getDate() - 10);
-    const future = new Date(today); future.setDate(today.getDate() + 14);
+    const future = new Date(today); future.setDate(today.getDate() + 10);
     const season = today.getFullYear();
 
     const [schedRes, standRes] = await Promise.all([
@@ -45,7 +46,7 @@ export async function fetchMets() {
       ),
     ]);
 
-    // ── Record ──────────────────────────────────────────
+    // ── Record ──────────────────────────────────────────────────────────────
     let record = null;
     if (standRes.ok) {
       const sd = await standRes.json();
@@ -53,11 +54,11 @@ export async function fetchMets() {
         for (const tr of div.teamRecords ?? []) {
           if (tr.team?.id === METS_ID) {
             record = {
-              wins:  tr.wins,
-              losses: tr.losses,
-              pct:   tr.leagueRecord?.pct ?? '.000',
+              wins:         tr.wins,
+              losses:       tr.losses,
+              pct:          tr.leagueRecord?.pct ?? '.000',
               divisionRank: tr.divisionRank ?? '-',
-              gamesBack: tr.gamesBack ?? '-',
+              gamesBack:    tr.gamesBack ?? '-',
             };
             break outer;
           }
@@ -65,9 +66,9 @@ export async function fetchMets() {
       }
     }
 
-    // ── Games ────────────────────────────────────────────
-    let lastGame = null;
-    let nextGame = null;
+    // ── Games ────────────────────────────────────────────────────────────────
+    let lastGame     = null;
+    let upcomingGames = [];
 
     if (schedRes.ok) {
       const sd = await schedRes.json();
@@ -85,6 +86,7 @@ export async function fetchMets() {
                g.status?.abstractGameState === 'Live'
       );
 
+      // Most recent completed game
       if (finals.length) {
         const g        = finals[finals.length - 1];
         const metsHome = g.teams.home.team.id === METS_ID;
@@ -101,14 +103,16 @@ export async function fetchMets() {
         };
       }
 
-      if (upcoming.length) {
-        const g        = upcoming[0];
-        const isLive   = g.status?.abstractGameState === 'Live';
+      // Next 5 upcoming / live games
+      upcomingGames = upcoming.slice(0, 5).map((g) => {
         const metsHome = g.teams.home.team.id === METS_ID;
+        const isLive   = g.status?.abstractGameState === 'Live';
         const opp      = metsHome ? g.teams.away.team.name : g.teams.home.team.name;
-        nextGame = {
-          date:     g.dateStr,
-          time:     fmtGameTime(g.gameDate),
+        const parts    = fmtGameParts(g.gameDate);
+        return {
+          weekday:  parts.weekday,
+          date:     parts.date,
+          time:     parts.time,
           opponent: shortName(opp),
           homeAway: metsHome ? 'vs' : '@',
           isLive,
@@ -117,10 +121,10 @@ export async function fetchMets() {
             opp:  metsHome ? g.teams.away.score : g.teams.home.score,
           } : null,
         };
-      }
+      });
     }
 
-    return { record, lastGame, nextGame };
+    return { record, lastGame, upcomingGames };
   } catch (err) {
     return { error: err.message };
   }
