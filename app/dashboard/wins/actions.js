@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createServerClient } from '../../lib/supabase';
 import { splitImpact } from '../../lib/wins';
+import { incrementActivity } from '../../lib/dailyActivity';
 
 function parseFormData(formData) {
   const tagsRaw = formData.get('tags')?.toString().trim() || '';
@@ -36,6 +37,7 @@ export async function addWin(prevState, formData) {
   });
 
   if (error) return { error: error.message };
+  await incrementActivity('wins_logged');
   revalidatePath('/dashboard/wins');
   return { success: true };
 }

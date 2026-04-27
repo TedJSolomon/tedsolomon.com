@@ -28,7 +28,10 @@
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(vercel *)",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "Bash(xargs cat *)",
+      "Bash(grep -n \"page-fade-in\\\\|\\\\.ooo-card {$\\\\|\\\\.win-card {$\\\\|\\\\.goal-card {$\\\\|\\\\.wl-card {$\\\\|\\\\.chart-card {$\\\\|\\\\.wins-form-card {$\\\\|backdrop-filter: blur\" /Users/tedsolomon/GitHub/tedsolomon.com/app/globals.css)",
+      "Bash(grep -n \"db-sb-right\\\\|db-sb-metric-top\\\\|db-sb-metric {$\\\\|db-sb-greeting {$\\\\|db-sb-clock {$\\\\|height: 52px\" /Users/tedsolomon/GitHub/tedsolomon.com/app/globals.css)"
     ]
   }
 }

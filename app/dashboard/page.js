@@ -4,15 +4,16 @@ import { getAllGoals, CATEGORY_COLORS } from '../lib/goals';
 import { fetchWeather } from '../lib/weather';
 import { fetchMets } from '../lib/mets';
 import { fetchCalendarEvents } from '../lib/calendar';
+import BentoNews from './BentoNews';
+import CountUp from './CountUp';
 
 export const metadata = { title: 'Overview — Dashboard' };
 export const dynamic  = 'force-dynamic';
 
-// ── Date helpers ────────────────────────────────────────────
+// ── Date helpers ─────────────────────────────────────────────
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
-
 function weekStartStr() {
   const d = new Date();
   const day = d.getUTCDay();
@@ -21,48 +22,44 @@ function weekStartStr() {
   mon.setUTCDate(d.getUTCDate() - daysBack);
   return mon.toISOString().slice(0, 10);
 }
-
 function formatDate() {
   return new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
 }
-
-// ── Goal progress ───────────────────────────────────────────
-function goalPct(goal) {
-  if (goal.measure_type && goal.measure_type !== 'Yes/No') {
-    const cur = Number(goal.current_value ?? 0);
-    const tgt = Number(goal.target_value  ?? 0);
-    return tgt > 0 ? Math.min(100, Math.round((cur / tgt) * 100)) : 0;
-  }
-  if (goal.measure_type === 'Yes/No') {
-    return (goal.current_value ?? 0) >= 1 ? 100 : 0;
-  }
-  const subs = goal.subtasks || [];
-  if (!subs.length) return 0;
-  return Math.round(subs.filter((s) => s.completed).length / subs.length * 100);
+function formatDueDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-');
+  const date  = new Date(Number(y), Number(m) - 1, Number(d));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diff  = Math.round((date - today) / 86400000);
+  if (diff === 0)  return 'Today';
+  if (diff === 1)  return 'Tomorrow';
+  if (diff < 0)   return `${Math.abs(diff)}d ago`;
+  if (diff < 7)   return `in ${diff}d`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function goalMetricLabel(goal) {
-  if (!goal.measure_type) return null;
-  const cur  = Number(goal.current_value ?? 0);
-  const tgt  = Number(goal.target_value  ?? 0);
-  const unit = goal.measure_unit || '';
-  switch (goal.measure_type) {
-    case 'Yes/No':        return (goal.current_value ?? 0) >= 1 ? 'Achieved' : 'In progress';
-    case 'Percentage':    return `${cur}% / ${tgt}%`;
-    case 'Currency ($)':  return `$${cur.toLocaleString()} / $${tgt.toLocaleString()}`;
-    case 'Hours':         return `${cur}h / ${tgt}h`;
-    case 'Weight (lbs)':  return `${cur} / ${tgt} lbs`;
-    case 'Count (each)':  return unit ? `${cur} / ${tgt} ${unit}` : `${cur} / ${tgt}`;
-    case 'Custom':        return unit ? `${cur} / ${tgt} ${unit}` : `${cur} / ${tgt}`;
-    default:              return null;
+// ── Subtask helpers ──────────────────────────────────────────
+function subtaskProgressLabel(s) {
+  if (!s.measure_type || s.measure_type === 'Yes/No') return null;
+  const cur  = Number(s.current_value ?? 0);
+  const tgt  = Number(s.target_value  ?? 0);
+  if (!tgt) return null;
+  const unit = s.measure_unit || '';
+  switch (s.measure_type) {
+    case 'Percentage':    return `${cur}%`;
+    case 'Currency ($)':  return `$${cur.toLocaleString()}`;
+    case 'Hours':         return `${cur}h/${tgt}h`;
+    case 'Weight (lbs)':  return `${cur}/${tgt}lbs`;
+    case 'Count (each)':  return unit ? `${cur}/${tgt} ${unit}` : `${cur}/${tgt}`;
+    case 'Custom':        return unit ? `${cur}/${tgt} ${unit}` : `${cur}/${tgt}`;
+    default:              return `${cur}/${tgt}`;
   }
 }
 
-// ── Quote ───────────────────────────────────────────────────
+// ── Quote ────────────────────────────────────────────────────
 const FALLBACK_QUOTE = { q: 'The secret of getting ahead is getting started.', a: 'Mark Twain' };
-
 async function getQuote() {
   try {
     const res = await fetch('https://zenquotes.io/api/random', { next: { revalidate: 86400 } });
@@ -73,7 +70,7 @@ async function getQuote() {
   return FALLBACK_QUOTE;
 }
 
-// ── Icons ───────────────────────────────────────────────────
+// ── Icons ────────────────────────────────────────────────────
 function IconWin() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -110,29 +107,32 @@ function IconCalendar() {
   );
 }
 
-// Google Calendar event color IDs → accent colors (subset of Google's palette)
+// ── Calendar event renderer ──────────────────────────────────
 const GCal_COLORS = {
   '1': '#a4bdfc', '2': '#7ae7bf', '3': '#dbadff', '4': '#ff887c',
   '5': '#fbd75b', '6': '#ffb878', '7': '#46d6db', '8': '#e1e1e1',
   '9': '#5484ed', '10': '#51b749', '11': '#dc2127',
 };
-
 function CalEventList({ events, emptyText }) {
-  if (!events.length) {
-    return <p className="cal-empty">{emptyText}</p>;
-  }
+  if (!events.length) return <p className="cal-empty">{emptyText}</p>;
   return (
     <ul className="cal-event-list">
       {events.map((ev) => {
-        const accentColor = ev.color ? GCal_COLORS[ev.color] ?? '#e8a838' : '#e8a838';
+        // Priority: event-specific color → calendar color → default amber
+        const accentColor = ev.color
+          ? (GCal_COLORS[ev.color] ?? ev.calendarAccent ?? '#e8a838')
+          : (ev.calendarAccent ?? '#e8a838');
         return (
           <li key={ev.id} className="cal-event" style={{ '--cal-accent': accentColor }}>
             <span className="cal-event-time">
               {ev.isAllDay ? 'All day' : `${ev.startTime}${ev.endTime ? ` – ${ev.endTime}` : ''}`}
             </span>
             <span className="cal-event-title">{ev.title}</span>
-            {ev.location && (
-              <span className="cal-event-loc">{ev.location}</span>
+            {ev.location && <span className="cal-event-loc">{ev.location}</span>}
+            {ev.calendarLabel && (
+              <span className="cal-cal-name" style={{ color: ev.calendarAccent ?? '#e8a838' }}>
+                {ev.calendarLabel}
+              </span>
             )}
           </li>
         );
@@ -141,7 +141,7 @@ function CalEventList({ events, emptyText }) {
   );
 }
 
-// ── Page ────────────────────────────────────────────────────
+// ── Page ─────────────────────────────────────────────────────
 export default async function DashboardOverview() {
   const [wins, goals, quote, weather, mets, calendar] = await Promise.all([
     getAllWins(),
@@ -157,10 +157,24 @@ export default async function DashboardOverview() {
   const winsToday    = wins.filter((w) => w.date === today).length;
   const winsThisWeek = wins.filter((w) => w.date >= weekStart).length;
 
-  const activeGoals = goals
-    .filter((g) => g.status === 'active')
-    .slice(0, 3)
-    .map((g) => ({ ...g, pct: goalPct(g) }));
+  // Upcoming subtasks with due dates, sorted soonest first
+  const upcomingSubtasks = goals
+    .filter((g) => g.status !== 'cancelled')
+    .flatMap((g) =>
+      (g.subtasks || [])
+        .filter((s) => s.due_date && !s.completed)
+        .map((s) => ({
+          id:        s.id,
+          title:     s.title,
+          goalTitle: g.title,
+          goalColor: CATEGORY_COLORS[g.category]?.bg ?? '#e8a838',
+          dueDate:   s.due_date,
+          isOverdue: s.due_date < today,
+          progress:  subtaskProgressLabel(s),
+        }))
+    )
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, 10);
 
   return (
     <div className="db-content overview-page">
@@ -172,205 +186,7 @@ export default async function DashboardOverview() {
 
       <div className="bento-grid">
 
-        {/* ── GOAL PROGRESS — large 2×2 ── */}
-        <div className="bento-card bento-goals">
-          <div className="bento-card-header">
-            <span className="bento-card-label">Goal Progress</span>
-            <Link href="/dashboard/goals" className="bento-card-link">View all →</Link>
-          </div>
-          {activeGoals.length === 0 ? (
-            <p className="bento-empty">No active goals yet.</p>
-          ) : (
-            <div className="bento-goals-list">
-              {activeGoals.map((goal) => {
-                const color  = CATEGORY_COLORS[goal.category] || CATEGORY_COLORS.Other;
-                const subs   = goal.subtasks || [];
-                const done   = subs.filter((s) => s.completed).length;
-                const metric = goalMetricLabel(goal);
-                const pct    = goal.pct;
-                return (
-                  <div key={goal.id} className="bento-goal-item">
-                    <div className="bento-goal-meta">
-                      <span className="bento-goal-title">{goal.title}</span>
-                      {metric ? (
-                        <span className="bento-goal-metric">{metric}</span>
-                      ) : (
-                        <span className="bento-goal-pct">{pct}%</span>
-                      )}
-                    </div>
-                    <div className="bento-goal-track">
-                      <div className="bento-goal-fill"
-                        style={{ width: `${pct > 0 ? Math.max(pct, 3) : 0}%`, background: color.bg }} />
-                    </div>
-                    <div className="bento-goal-sub">
-                      <span className="bento-goal-cat" style={{ color: color.bg }}>{goal.category}</span>
-                      {subs.length > 0 && (
-                        <span className="bento-goal-subs">{done}/{subs.length} subtasks</span>
-                      )}
-                      {metric && pct > 0 && subs.length === 0 && (
-                        <span className="bento-goal-subs">{pct}%</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          <Link href="/dashboard/goals" className="bento-action-btn bento-goals-cta">
-            Manage Goals →
-          </Link>
-        </div>
-
-        {/* ── TODAY'S WINS — medium 2×1 ── */}
-        <div className="bento-card bento-wins">
-          <div className="bento-card-header">
-            <span className="bento-card-label">Wins</span>
-            <Link href="/dashboard/wins" className="bento-card-link">View all →</Link>
-          </div>
-          <div className="bento-wins-stats">
-            <div className="bento-stat">
-              <span className="bento-stat-num">{winsToday}</span>
-              <span className="bento-stat-label">Today</span>
-            </div>
-            <div className="bento-stat-divider" />
-            <div className="bento-stat">
-              <span className="bento-stat-num">{winsThisWeek}</span>
-              <span className="bento-stat-label">This week</span>
-            </div>
-          </div>
-          <Link href="/dashboard/wins" className="bento-action-btn">Log a Win →</Link>
-        </div>
-
-        {/* ── QUICK ADD — small 1×1 ── */}
-        <div className="bento-card bento-quick">
-          <div className="bento-card-header">
-            <span className="bento-card-label">Quick Add</span>
-          </div>
-          <nav className="bento-quick-btns" aria-label="Quick navigation">
-            <Link href="/dashboard/wins" className="bento-quick-btn">
-              <span className="bento-quick-icon"><IconWin /></span>
-              Log a Win
-            </Link>
-            <Link href="/dashboard/one-on-ones" className="bento-quick-btn">
-              <span className="bento-quick-icon"><IconChat /></span>
-              Add 1-on-1 Note
-            </Link>
-            <Link href="/dashboard/wishlist" className="bento-quick-btn">
-              <span className="bento-quick-icon"><IconHeart /></span>
-              Add Wishlist Item
-            </Link>
-          </nav>
-        </div>
-
-        {/* ── QUOTE OF THE DAY — small 1×1 ── */}
-        <div className="bento-card bento-quote">
-          <span className="bento-quote-mark">&ldquo;</span>
-          <blockquote className="bento-quote-text">{quote.q}</blockquote>
-          <cite className="bento-quote-author">— {quote.a}</cite>
-        </div>
-
-        {/* ── WEATHER — medium 2×1 ── */}
-        <div className="bento-card bento-weather">
-          <div className="bento-card-header">
-            <span className="bento-card-label">Weather · {weather.city ?? 'Farmingdale, NY'}</span>
-          </div>
-          {weather.error ? (
-            <p className="bento-empty bento-error">
-              {weather.error.includes('not set')
-                ? 'Add NEXT_PUBLIC_OPENWEATHER_API_KEY to .env.local'
-                : weather.error}
-            </p>
-          ) : (
-            <div className="bento-weather-body">
-              <div className="bento-weather-main">
-                <div className="bento-weather-left">
-                  <span className="bento-weather-temp">{weather.temp}°</span>
-                  <span className="bento-weather-desc">
-                    {weather.description.charAt(0).toUpperCase() + weather.description.slice(1)}
-                  </span>
-                  <span className="bento-weather-hl">
-                    H: {weather.high}° &nbsp; L: {weather.low}°
-                  </span>
-                </div>
-                <span className="bento-weather-emoji" aria-label={weather.condition}>
-                  {weather.emoji}
-                </span>
-              </div>
-              <div className="bento-weather-meta">
-                <span>Feels like {weather.feelsLike}°</span>
-                <span>Humidity {weather.humidity}%</span>
-                <span>Wind {weather.windSpeed} mph</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ── NY METS — medium 2×1 ── */}
-        <div className="bento-card bento-mets">
-          <div className="bento-card-header">
-            <div className="bento-mets-title">
-              <span className="bento-mets-logo">
-                <span className="bento-mets-ny">NY</span>
-                <span className="bento-mets-mets">METS</span>
-              </span>
-            </div>
-            {mets.record && (
-              <span className="bento-mets-record">
-                {mets.record.wins}–{mets.record.losses}
-                <span className="bento-mets-pct"> ({mets.record.pct})</span>
-              </span>
-            )}
-          </div>
-
-          {mets.error ? (
-            <p className="bento-empty bento-error">{mets.error}</p>
-          ) : (
-            <div className="bento-mets-body">
-
-              {mets.lastGame && (
-                <div className="bento-mets-row">
-                  <span className="bento-mets-row-label">Last</span>
-                  <span className={`bento-result-badge bento-result-${mets.lastGame.result.toLowerCase()}`}>
-                    {mets.lastGame.result}
-                  </span>
-                  <span className="bento-mets-score">
-                    {mets.lastGame.metsScore}–{mets.lastGame.oppScore}
-                  </span>
-                  <span className="bento-mets-opp">
-                    {mets.lastGame.homeAway} {mets.lastGame.opponent}
-                  </span>
-                </div>
-              )}
-
-              {mets.upcomingGames?.map((game, i) => (
-                <div key={i} className="bento-mets-row">
-                  <span className="bento-mets-row-label">{game.weekday}</span>
-                  {game.isLive ? (
-                    <>
-                      <span className="bento-live-badge">LIVE</span>
-                      <span className="bento-mets-score">
-                        {game.liveScore?.mets}–{game.liveScore?.opp}
-                      </span>
-                      <span className="bento-mets-opp">{game.homeAway} {game.opponent}</span>
-                    </>
-                  ) : (
-                    <span className="bento-mets-next-info">
-                      {game.homeAway} {game.opponent}
-                      <span className="bento-mets-time"> · {game.date} · {game.time}</span>
-                    </span>
-                  )}
-                </div>
-              ))}
-
-              {!mets.lastGame && !mets.upcomingGames?.length && (
-                <p className="bento-empty">No recent games found.</p>
-              )}
-
-            </div>
-          )}
-        </div>
-
-        {/* ── GOOGLE CALENDAR ── */}
+        {/* ── ROW 1: CALENDAR (~40%) ── */}
         <div className="bento-card bento-calendar">
           <div className="bento-card-header">
             <span className="bento-card-label">
@@ -383,7 +199,6 @@ export default async function DashboardOverview() {
               </span>
             )}
           </div>
-
           {!calendar.connected ? (
             <div className="cal-connect">
               <p className="cal-connect-desc">Connect your Google Calendar to see your daily agenda here.</p>
@@ -405,6 +220,189 @@ export default async function DashboardOverview() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* ── ROW 1: NEWS (~30%) — client component renders its own card ── */}
+        <BentoNews />
+
+        {/* ── ROW 1: WEATHER (~30%) ── */}
+        <div className="bento-card bento-weather">
+          <div className="bento-card-header">
+            <span className="bento-card-label">Weather · {weather.city ?? 'Farmingdale'}</span>
+          </div>
+          {weather.error ? (
+            <p className="bento-empty bento-error">
+              {weather.error.includes('not set') ? 'Add NEXT_PUBLIC_OPENWEATHER_API_KEY to .env.local' : weather.error}
+            </p>
+          ) : (
+            <>
+              {/* Compact current conditions */}
+              <div className="bento-wx-now">
+                <span className="bento-wx-emoji" aria-label={weather.condition}>{weather.emoji}</span>
+                <div className="bento-wx-center">
+                  <span className="bento-wx-temp"><CountUp value={weather.temp} delay={0.85} suffix="°" /></span>
+                  <span className="bento-wx-desc">
+                    {weather.description.charAt(0).toUpperCase() + weather.description.slice(1)}
+                  </span>
+                </div>
+                <div className="bento-wx-hl">
+                  <span>H {weather.high}°</span>
+                  <span>L {weather.low}°</span>
+                </div>
+              </div>
+              <div className="bento-wx-meta">
+                <span>Feels {weather.feelsLike}°</span>
+                <span>{weather.humidity}% humid</span>
+                <span>{weather.windSpeed} mph</span>
+              </div>
+              {/* 5-day forecast */}
+              {weather.forecast?.length > 0 && (
+                <div className="bento-wx-forecast">
+                  {weather.forecast.map((day) => (
+                    <div key={day.day} className="bento-wx-fc-row">
+                      <span className="bento-wx-fc-day">{day.day}</span>
+                      <span className="bento-wx-fc-icon">{day.emoji}</span>
+                      <span className="bento-wx-fc-hi">{day.high}°</span>
+                      <span className="bento-wx-fc-lo">{day.low}°</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ── ROW 2: GOALS — UPCOMING TASKS ── */}
+        <div className="bento-card bento-goals">
+          <div className="bento-card-header">
+            <span className="bento-card-label">Upcoming Tasks</span>
+            <Link href="/dashboard/goals" className="bento-card-link">All goals →</Link>
+          </div>
+          {upcomingSubtasks.length === 0 ? (
+            <p className="bento-empty">No upcoming tasks with due dates.</p>
+          ) : (
+            <div className="bento-tasks-list">
+              {upcomingSubtasks.map((s) => (
+                <div key={s.id} className={`bento-task-row${s.isOverdue ? ' overdue' : ''}`}>
+                  <div className="bento-task-main">
+                    <span className="bento-task-title">{s.title}</span>
+                    <span className="bento-task-goal" style={{ color: s.goalColor }}>{s.goalTitle}</span>
+                  </div>
+                  <div className="bento-task-right">
+                    {s.progress && <span className="bento-task-progress">{s.progress}</span>}
+                    <span className={`bento-task-due${s.isOverdue ? ' overdue' : ''}`}>
+                      {formatDueDate(s.dueDate)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── ROW 2: METS ── */}
+        <div className="bento-card bento-mets">
+          <div className="bento-card-header">
+            <div className="bento-mets-title">
+              <span className="bento-mets-logo">
+                <span className="bento-mets-ny">NY</span>
+                <span className="bento-mets-mets">METS</span>
+              </span>
+            </div>
+            {mets.record && (
+              <span className="bento-mets-record">
+                {mets.record.wins}–{mets.record.losses}
+                <span className="bento-mets-pct"> ({mets.record.pct})</span>
+              </span>
+            )}
+          </div>
+          {mets.error ? (
+            <p className="bento-empty bento-error">{mets.error}</p>
+          ) : (
+            <div className="bento-mets-body">
+              {mets.lastGame && (
+                <div className="bento-mets-row">
+                  <span className="bento-mets-row-label">Last</span>
+                  <span className={`bento-result-badge bento-result-${mets.lastGame.result.toLowerCase()}`}>
+                    {mets.lastGame.result}
+                  </span>
+                  <span className="bento-mets-score">
+                    {mets.lastGame.metsScore}–{mets.lastGame.oppScore}
+                  </span>
+                  <span className="bento-mets-opp">
+                    {mets.lastGame.homeAway} {mets.lastGame.opponent}
+                  </span>
+                </div>
+              )}
+              {mets.upcomingGames?.map((game, i) => (
+                <div key={i} className="bento-mets-row">
+                  <span className="bento-mets-row-label">{game.weekday}</span>
+                  {game.isLive ? (
+                    <>
+                      <span className="bento-live-badge">LIVE</span>
+                      <span className="bento-mets-score">{game.liveScore?.mets}–{game.liveScore?.opp}</span>
+                      <span className="bento-mets-opp">{game.homeAway} {game.opponent}</span>
+                    </>
+                  ) : (
+                    <span className="bento-mets-next-info">
+                      {game.homeAway} {game.opponent}
+                      <span className="bento-mets-time"> · {game.date} · {game.time}</span>
+                    </span>
+                  )}
+                </div>
+              ))}
+              {!mets.lastGame && !mets.upcomingGames?.length && (
+                <p className="bento-empty">No recent games found.</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── ROW 2: WINS — compact ── */}
+        <div className="bento-card bento-wins">
+          <div className="bento-card-header">
+            <span className="bento-card-label">Wins</span>
+          </div>
+          <div className="bento-wins-stats">
+            <div className="bento-stat">
+              <span className="bento-stat-num"><CountUp value={winsToday} delay={1.3} /></span>
+              <span className="bento-stat-label">Today</span>
+            </div>
+            <div className="bento-stat-divider" />
+            <div className="bento-stat">
+              <span className="bento-stat-num"><CountUp value={winsThisWeek} delay={1.35} /></span>
+              <span className="bento-stat-label">This week</span>
+            </div>
+          </div>
+          <Link href="/dashboard/wins" className="bento-action-btn">Log a Win →</Link>
+        </div>
+
+        {/* ── ROW 3: QUOTE ── */}
+        <div className="bento-card bento-quote">
+          <span className="bento-quote-mark">&ldquo;</span>
+          <blockquote className="bento-quote-text">{quote.q}</blockquote>
+          <cite className="bento-quote-author">— {quote.a}</cite>
+        </div>
+
+        {/* ── ROW 3: QUICK ADD ── */}
+        <div className="bento-card bento-quick">
+          <div className="bento-card-header">
+            <span className="bento-card-label">Quick Add</span>
+          </div>
+          <nav className="bento-quick-btns" aria-label="Quick navigation">
+            <Link href="/dashboard/wins" className="bento-quick-btn">
+              <span className="bento-quick-icon"><IconWin /></span>
+              Log a Win
+            </Link>
+            <Link href="/dashboard/one-on-ones" className="bento-quick-btn">
+              <span className="bento-quick-icon"><IconChat /></span>
+              Add 1-on-1 Note
+            </Link>
+            <Link href="/dashboard/wishlist" className="bento-quick-btn">
+              <span className="bento-quick-icon"><IconHeart /></span>
+              Add Wishlist Item
+            </Link>
+          </nav>
         </div>
 
       </div>

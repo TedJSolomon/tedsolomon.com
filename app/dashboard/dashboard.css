@@ -1,0 +1,215 @@
+/*
+ * dashboard.css — imported in app/dashboard/layout.js
+ *
+ * Single source of truth for all dashboard visual styles.
+ * Zero animations. Zero JavaScript dependencies.
+ * All values hard-coded — no CSS custom properties that could fail to resolve.
+ * Loads as part of the dashboard layout chunk, available on every render
+ * including hard refresh and direct URL navigation.
+ */
+
+/* ──────────────────────────────────────────────────
+   STATUS BAR
+   Single horizontal flex row. Never stacks vertically.
+   ────────────────────────────────────────────────── */
+.db-statusbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* Hard explicit row — cannot be overridden by inheritance */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
+  height: 44px;
+  padding: 0 2rem;
+  flex-shrink: 0;
+  /* Frosted glass */
+  background: rgba(8, 8, 11, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  /* Amber bottom border */
+  border-bottom: 1px solid rgba(232, 168, 56, 0.22);
+  box-shadow: 0 1px 0 rgba(232, 168, 56, 0.06),
+              0 4px 20px rgba(0, 0, 0, 0.35);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.db-sb-clock {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #f5f3ef;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.db-sb-greeting {
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  color: #7a7870;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.db-sb-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.db-sb-metric {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.db-sb-metric-icon {
+  font-size: 0.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.db-sb-metric-val {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #f5f3ef;
+  letter-spacing: 0.02em;
+  min-width: 1.4rem;
+}
+
+.db-sb-metric-label {
+  font-size: 0.52rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #5a5850;
+}
+
+/* Typewriter cursor — only animation in this file, cosmetic only */
+.db-sb-cursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 0.75em;
+  background: #e8a838;
+  margin-left: 1px;
+  vertical-align: middle;
+  animation: db-cursor-blink 0.65s ease-in-out infinite;
+}
+
+@keyframes db-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ──────────────────────────────────────────────────
+   JARVIS CARD STYLING
+   Applies to all dashboard card types.
+   No backdrop-filter (avoids compositing issues with
+   animated parent backgrounds).
+   ────────────────────────────────────────────────── */
+
+/* Overview bento cards */
+.bento-card {
+  background: rgba(19, 22, 29, 0.85) !important;
+  border: 1px solid rgba(232, 168, 56, 0.15) !important;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+.bento-card:hover {
+  border-color: rgba(232, 168, 56, 0.3) !important;
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12) !important;
+}
+
+/* Win cards */
+.win-card {
+  background: rgba(19, 22, 29, 0.85) !important;
+  border: 1px solid rgba(232, 168, 56, 0.15) !important;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+.win-card:hover {
+  border-color: rgba(232, 168, 56, 0.3) !important;
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12) !important;
+}
+
+/* One-on-one cards */
+.ooo-card {
+  background: rgba(19, 22, 29, 0.85) !important;
+  border: 1px solid rgba(232, 168, 56, 0.15) !important;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+.ooo-card:hover {
+  border-color: rgba(232, 168, 56, 0.3) !important;
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12) !important;
+}
+
+/* Goal cards (keeps the category-color top stripe) */
+.goal-card {
+  background: rgba(19, 22, 29, 0.85) !important;
+  border: 1px solid rgba(232, 168, 56, 0.15) !important;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+.goal-card:hover {
+  border-color: rgba(232, 168, 56, 0.3) !important;
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12) !important;
+}
+
+/* Wishlist cards */
+.wl-card {
+  background: rgba(19, 22, 29, 0.85) !important;
+  border: 1px solid rgba(232, 168, 56, 0.15) !important;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+.wl-card:hover {
+  border-color: rgba(232, 168, 56, 0.3) !important;
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12) !important;
+  transform: translateY(-2px);
+}
+
+/* Chart cards */
+.chart-card {
+  background: rgba(19, 22, 29, 0.85) !important;
+  border: 1px solid rgba(232, 168, 56, 0.15) !important;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Wins form card + filters */
+.wins-form-card {
+  background: rgba(19, 22, 29, 0.85) !important;
+  border: 1px solid rgba(232, 168, 56, 0.15) !important;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+.wins-filters {
+  background: rgba(19, 22, 29, 0.85) !important;
+  border: 1px solid rgba(232, 168, 56, 0.15) !important;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+/* ──────────────────────────────────────────────────
+   RESPONSIVE
+   ────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .db-sb-greeting     { display: none; }
+  .db-sb-metric-label { display: none; }
+  .db-statusbar       { gap: 1rem; padding: 0 1.25rem; }
+}
+
+@media (max-width: 600px) {
+  .db-statusbar { display: none; }
+}

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createServerClient } from '../../lib/supabase';
+import { incrementActivity } from '../../lib/dailyActivity';
 
 // ── Goals ────────────────────────────────────────────────────────────────────
 
@@ -129,6 +130,7 @@ export async function updateGoalProgress(id, current_value, note) {
     }),
   ]);
   if (error) throw new Error(error.message);
+  await incrementActivity('goals_updated');
   revalidatePath('/dashboard/goals');
 }
 
@@ -196,6 +198,7 @@ export async function toggleSubtask(id, completed) {
     })
     .eq('id', id);
   if (error) throw new Error(error.message);
+  if (completed) await incrementActivity('subtasks_completed');
   revalidatePath('/dashboard/goals');
 }
 
@@ -204,12 +207,13 @@ export async function updateSubtaskProgress(id, current_value, note, goal_id) {
   const supabase = createServerClient();
   const { data: subtask } = await supabase
     .from('subtasks')
-    .select('target_value, completion_threshold')
+    .select('target_value, completion_threshold, completed')
     .eq('id', id)
     .single();
 
-  const threshold = subtask?.completion_threshold ?? subtask?.target_value;
-  const completed = threshold != null && Number(current_value) >= Number(threshold);
+  const threshold    = subtask?.completion_threshold ?? subtask?.target_value;
+  const wasCompleted = subtask?.completed ?? false;
+  const completed    = threshold != null && Number(current_value) >= Number(threshold);
 
   const [{ error }] = await Promise.all([
     supabase.from('subtasks').update({
@@ -227,6 +231,8 @@ export async function updateSubtaskProgress(id, current_value, note, goal_id) {
     }),
   ]);
   if (error) throw new Error(error.message);
+  // Only count newly-completed subtasks (not re-saves of already-complete ones)
+  if (completed && !wasCompleted) await incrementActivity('subtasks_completed');
   revalidatePath('/dashboard/goals');
 }
 

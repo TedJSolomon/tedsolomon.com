@@ -2,18 +2,24 @@
    VARIABLES & RESET
    ============================================================ */
 :root {
-  --bg: #0c0f14;
-  --bg-card: #13161d;
-  --bg-card-hover: #1a1e28;
-  --surface: #13161d;
+  --bg: #080a0f;
+  --bg-card: #0e1118;
+  --bg-card-hover: #141821;
+  --surface: #0e1118;
   --accent: #e8a838;
   --accent-dim: rgba(232, 168, 56, 0.12);
-  --text: #e4e2dd;
-  --text-dim: #8a8880;
-  --text-muted: #8a8880;
-  --text-bright: #fff;
-  --border: rgba(255,255,255,0.06);
-  --border-accent: rgba(232, 168, 56, 0.25);
+  --text: #d8d5cf;
+  --text-dim: #7a7870;
+  --text-muted: #7a7870;
+  --text-bright: #f5f3ef;
+  --border: rgba(255,255,255,0.05);
+  --border-accent: rgba(232, 168, 56, 0.3);
+  /* HUD additions */
+  --hud-card-bg: rgba(19, 22, 29, 0.7);
+  --hud-border: rgba(232, 168, 56, 0.15);
+  --hud-glow-amber: rgba(232, 168, 56, 0.5);
+  --hud-glow-soft: rgba(232, 168, 56, 0.15);
+  --hud-glow-white: rgba(255, 255, 255, 0.15);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1136,8 +1142,19 @@ nav.site-nav {
   overflow-y: auto;
 }
 
+/* ── HUD Status Bar ──────────────────────────────────────────────────────────
+   Sticky at the top of the scrollable main column. In-flow so content below
+   starts right underneath it — no overlap issues. */
+/* Status bar styles moved to app/dashboard/dashboard.css */
+
 .db-content {
   padding: 3rem;
+  /* Animated HUD grid — subtle depth layer */
+  background-image:
+    linear-gradient(rgba(232,168,56,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232,168,56,0.06) 1px, transparent 1px);
+  background-size: 52px 52px;
+  animation: hud-grid-pan 60s linear infinite;
 }
 
 .db-page-header {
@@ -1301,39 +1318,46 @@ nav.site-nav {
   margin-bottom: 0;
 }
 
-/* Grid */
+/* Grid — 10 equal columns */
 .bento-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 210px 230px auto auto;
+  grid-template-columns: repeat(10, 1fr);
   gap: 1.25rem;
 }
 
-/* Placement */
-.bento-goals    { grid-column: 1 / 3; grid-row: 1 / 3; }
-.bento-wins     { grid-column: 3 / 5; grid-row: 1 / 2; }
-.bento-quick    { grid-column: 3 / 4; grid-row: 2 / 3; }
-.bento-quote    { grid-column: 4 / 5; grid-row: 2 / 3; }
-.bento-weather  { grid-column: 1 / 3; grid-row: 3 / 4; min-height: 160px; }
-.bento-mets     { grid-column: 3 / 5; grid-row: 3 / 4; min-height: 160px; }
-.bento-calendar { grid-column: 1 / 5; grid-row: 4 / 5; min-height: 200px; }
+/* ── Row 1: full-width informational cards ── */
+.bento-calendar { grid-column: 1 / 5;  grid-row: 1; }   /* ~40% */
+.bento-news     { grid-column: 5 / 8;  grid-row: 1; }   /* ~30% */
+.bento-weather  { grid-column: 8 / 11; grid-row: 1; }   /* ~30% */
 
-/* Base card */
+/* ── Row 2: glanceable secondary cards ── */
+.bento-goals    { grid-column: 1 / 6;  grid-row: 2; }   /* 50% */
+.bento-mets     { grid-column: 6 / 9;  grid-row: 2; }   /* 30% */
+.bento-wins     { grid-column: 9 / 11; grid-row: 2; }   /* 20% */
+
+/* ── Row 3: utility ── */
+.bento-quote    { grid-column: 1 / 6;  grid-row: 3; }
+.bento-quick    { grid-column: 6 / 11; grid-row: 3; }
+
+/* Base card — holographic panel */
 .bento-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(19, 22, 29, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 168, 56, 0.15);
   border-radius: 12px;
   padding: 1.4rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
   overflow: hidden;
   height: 100%;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05);
 }
 .bento-card:hover {
-  border-color: rgba(232,168,56,0.22);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  border-color: rgba(232, 168, 56, 0.3);
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12);
 }
 
 /* Card header row */
@@ -1349,7 +1373,7 @@ nav.site-nav {
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: var(--text-muted);
+  color: rgba(232,168,56,0.55);
 }
 
 .bento-card-link {
@@ -1408,19 +1432,38 @@ nav.site-nav {
   font-weight: 600;
   color: var(--accent);
   flex-shrink: 0;
+  text-shadow: 0 0 10px rgba(232,168,56,0.5);
 }
 
 .bento-goal-track {
-  height: 5px;
-  background: rgba(255,255,255,0.07);
-  border-radius: 3px;
-  overflow: hidden;
+  height: 2px;
+  background: rgba(232,168,56,0.1);
+  border-radius: 2px;
+  overflow: visible;
+  position: relative;
 }
 
 .bento-goal-fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 2px;
   transition: width 0.6s ease;
+  position: relative;
+  box-shadow: 0 0 8px currentColor, 0 0 2px currentColor;
+}
+
+/* Pulsing leading-edge dot */
+.bento-goal-fill::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  width: 4px;
+  height: 8px;
+  background: inherit;
+  border-radius: 2px;
+  filter: brightness(1.5);
+  box-shadow: 0 0 6px currentColor;
+  animation: progress-pulse 2.4s ease-in-out infinite;
 }
 
 .bento-goal-sub {
@@ -1457,15 +1500,17 @@ nav.site-nav {
   letter-spacing: 0.1em;
   color: var(--accent);
   text-decoration: none;
-  border: 1px solid var(--border-accent);
+  border: 1px solid rgba(232,168,56,0.28);
   padding: 0.45rem 0.9rem;
   border-radius: 5px;
   flex-shrink: 0;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 8px rgba(232,168,56,0.08);
 }
 .bento-action-btn:hover {
-  background: var(--accent-dim);
-  border-color: var(--accent);
+  background: rgba(232,168,56,0.1);
+  border-color: rgba(232,168,56,0.6);
+  box-shadow: 0 0 16px rgba(232,168,56,0.2), inset 0 0 12px rgba(232,168,56,0.06);
 }
 
 /* ── Wins card ── */
@@ -1488,6 +1533,7 @@ nav.site-nav {
   line-height: 1;
   color: var(--text-bright);
   letter-spacing: -0.02em;
+  text-shadow: 0 0 30px rgba(255,255,255,0.14), 0 0 60px rgba(255,255,255,0.05);
 }
 
 .bento-stat-label {
@@ -1501,7 +1547,8 @@ nav.site-nav {
 .bento-stat-divider {
   width: 1px;
   height: 48px;
-  background: var(--border);
+  background: linear-gradient(to bottom, transparent, rgba(232,168,56,0.4), transparent);
+  box-shadow: 0 0 6px rgba(232,168,56,0.2);
   flex-shrink: 0;
 }
 
@@ -1520,16 +1567,18 @@ nav.site-nav {
   gap: 0.7rem;
   padding: 0.55rem 0.75rem;
   border-radius: 7px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(232,168,56,0.1);
+  background: rgba(232,168,56,0.03);
   color: var(--text-dim);
   text-decoration: none;
   font-size: 0.8rem;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition: border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 .bento-quick-btn:hover {
-  border-color: rgba(232,168,56,0.3);
-  background: rgba(232,168,56,0.05);
-  color: var(--text);
+  border-color: rgba(232,168,56,0.38);
+  background: rgba(232,168,56,0.08);
+  color: var(--text-bright);
+  box-shadow: 0 0 12px rgba(232,168,56,0.1), inset 0 0 16px rgba(232,168,56,0.04);
 }
 
 .bento-quick-icon {
@@ -1555,12 +1604,13 @@ nav.site-nav {
   font-size: 5rem;
   line-height: 1;
   color: var(--accent);
-  opacity: 0.18;
+  opacity: 0.22;
   position: absolute;
   top: 1rem;
   left: 1.25rem;
   user-select: none;
   pointer-events: none;
+  text-shadow: 0 0 30px rgba(232,168,56,0.4);
 }
 
 .bento-quote-text {
@@ -1654,6 +1704,198 @@ nav.site-nav {
   color: #f07878;
 }
 
+/* ── Compact weather card ── */
+.bento-wx-now {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+.bento-wx-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+.bento-wx-center {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+.bento-wx-temp {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2.2rem;
+  line-height: 1;
+  color: var(--text-bright);
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 24px rgba(255,255,255,0.18), 0 0 48px rgba(255,255,255,0.06);
+}
+.bento-wx-desc {
+  font-size: 0.78rem;
+  color: var(--text);
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bento-wx-hl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.bento-wx-meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+}
+.bento-wx-forecast {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+  margin-top: 0.1rem;
+}
+.bento-wx-fc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.bento-wx-fc-day {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  width: 2.2rem;
+  flex-shrink: 0;
+}
+.bento-wx-fc-icon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 1.4rem;
+  text-align: center;
+}
+.bento-wx-fc-hi {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text);
+  margin-left: auto;
+}
+.bento-wx-fc-lo {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  width: 2.5rem;
+  text-align: right;
+}
+
+/* ── Upcoming Tasks card (goals widget) ── */
+.bento-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.bento-task-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.bento-task-row:last-child { border-bottom: none; }
+.bento-task-row.overdue    { background: rgba(240,120,120,0.04); margin: 0 -0.4rem; padding: 0.45rem 0.4rem; border-radius: 4px; }
+.bento-task-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+.bento-task-title {
+  font-size: 0.83rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.bento-task-goal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+.bento-task-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.bento-task-progress {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.bento-task-due {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 3.5rem;
+  text-align: right;
+}
+.bento-task-due.overdue { color: #f07878; font-weight: 600; }
+
+/* ── Compact wins card ── */
+.bento-wins {
+  gap: 0.6rem;
+}
+.bento-wins .bento-wins-stats {
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  flex: 1;
+}
+.bento-wins .bento-stat { gap: 0.1rem; }
+.bento-wins .bento-stat-divider {
+  width: 22px;
+  height: 1px;
+}
+.bento-wins .bento-stat-num {
+  font-size: 2.2rem;
+}
+.bento-wins .bento-stat-label {
+  font-size: 0.55rem;
+}
+.bento-wins .bento-action-btn {
+  font-size: 0.6rem;
+  padding: 0.35rem 0.7rem;
+  margin-top: auto;
+}
+
 /* ── Mets card ── */
 .bento-mets {
   border-top: 2px solid #002D72;
@@ -1745,6 +1987,7 @@ nav.site-nav {
   font-weight: 600;
   color: var(--text-bright);
   flex-shrink: 0;
+  text-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
 
 .bento-mets-opp {
@@ -1876,10 +2119,16 @@ nav.site-nav {
   column-gap: 0.75rem;
   padding: 0.5rem 0.6rem 0.5rem 0.85rem;
   border-radius: 6px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-left: 3px solid var(--cal-accent, #e8a838);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-left: 2px solid var(--cal-accent, #e8a838);
   position: relative;
+  box-shadow: -2px 0 12px rgba(232,168,56,0.08), inset -20px 0 30px rgba(232,168,56,0.015);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.cal-event:hover {
+  background: rgba(255,255,255,0.04);
+  box-shadow: -2px 0 18px rgba(232,168,56,0.15), inset -20px 0 40px rgba(232,168,56,0.03);
 }
 
 .cal-event-time {
@@ -1913,27 +2162,51 @@ nav.site-nav {
   text-overflow: ellipsis;
 }
 
-/* ── Responsive ── */
-@media (max-width: 1100px) {
-  .bento-grid {
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: auto;
-  }
-  .bento-goals    { grid-column: 1 / 3; grid-row: auto; min-height: 300px; }
-  .bento-wins     { grid-column: 1 / 3; grid-row: auto; }
-  .bento-quick    { grid-column: 1;     grid-row: auto; }
-  .bento-quote    { grid-column: 2;     grid-row: auto; }
-  .bento-weather  { grid-column: 1;     grid-row: auto; }
-  .bento-mets     { grid-column: 2;     grid-row: auto; }
-  .bento-calendar { grid-column: 1 / 3; grid-row: auto; }
+/* Calendar source label — shown for non-primary calendar events */
+.cal-cal-name {
+  grid-column: 2;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.12rem;
 }
 
+/* ── Responsive ── */
+
+/* Tablet: 4-column grid */
+@media (max-width: 1100px) {
+  .bento-grid { grid-template-columns: repeat(4, 1fr); }
+
+  .bento-calendar { grid-column: 1 / 5; grid-row: auto; }
+  .bento-news     { grid-column: 1 / 3; grid-row: auto; }
+  .bento-weather  { grid-column: 3 / 5; grid-row: auto; }
+  .bento-goals    { grid-column: 1 / 5; grid-row: auto; }
+  .bento-mets     { grid-column: 1 / 3; grid-row: auto; }
+  .bento-wins     { grid-column: 3 / 5; grid-row: auto; }
+  .bento-quote    { grid-column: 1 / 3; grid-row: auto; }
+  .bento-quick    { grid-column: 3 / 5; grid-row: auto; }
+
+  /* Restore wins stats to horizontal row on tablet */
+  .bento-wins .bento-wins-stats { flex-direction: row; align-items: center; }
+  .bento-wins .bento-stat-divider { width: 1px; height: 48px; }
+  .bento-wins .bento-stat-num { font-size: 3.75rem; }
+}
+
+/* Mobile: single column */
 @media (max-width: 600px) {
   .bento-grid { grid-template-columns: 1fr; }
-  .bento-goals, .bento-wins, .bento-quick,
-  .bento-quote, .bento-weather, .bento-mets,
-  .bento-calendar { grid-column: 1; }
-  .bento-stat-num { font-size: 2.75rem; }
+  .bento-calendar, .bento-news, .bento-weather,
+  .bento-goals, .bento-mets, .bento-wins,
+  .bento-quote, .bento-quick { grid-column: 1; grid-row: auto; }
+
+  .bento-wins .bento-wins-stats { flex-direction: row; align-items: center; }
+  .bento-wins .bento-stat-divider { width: 1px; height: 48px; }
+  .bento-wins .bento-stat-num { font-size: 2.75rem; }
   .cal-body { grid-template-columns: 1fr; }
   .cal-event { grid-template-columns: 7rem 1fr; }
 }
@@ -2027,9 +2300,12 @@ nav.site-nav {
 }
 
 .chart-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(19, 22, 29, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 168, 56, 0.15);
   padding: 1.5rem 1.5rem 1.25rem;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05);
 }
 
 .chart-title {
@@ -2037,7 +2313,7 @@ nav.site-nav {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--text-dim);
+  color: rgba(232,168,56,0.55);
   margin-bottom: 1.25rem;
 }
 
@@ -2059,8 +2335,11 @@ nav.site-nav {
 }
 
 .wins-form-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(19, 22, 29, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 168, 56, 0.15);
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05);
   padding: 2rem;
   margin-bottom: 2.5rem;
   position: relative;
@@ -2276,9 +2555,12 @@ nav.site-nav {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(19, 22, 29, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 168, 56, 0.15);
   padding: 1.25rem;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05);
 }
 
 .wins-filters-row {
@@ -2412,16 +2694,22 @@ nav.site-nav {
 
 /* Card */
 .ooo-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(19, 22, 29, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 168, 56, 0.15);
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05);
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   outline: none;
 }
 
-.ooo-card:hover   { border-color: var(--border-accent); }
-.ooo-card:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232,168,56,0.15); }
-.ooo-card.expanded { border-color: rgba(232,168,56,0.25); }
+.ooo-card:hover {
+  border-color: rgba(232, 168, 56, 0.3);
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12);
+}
+.ooo-card:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232,168,56,0.2); }
+.ooo-card.expanded { border-color: rgba(232, 168, 56, 0.25); }
 
 .ooo-card-header {
   display: flex;
@@ -2612,16 +2900,25 @@ nav.site-nav {
 
 /* Goal card */
 .goal-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(19, 22, 29, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 168, 56, 0.15);
   border-radius: 10px;
   border-top: 3px solid var(--cat, #e8a838);
   overflow: hidden;
-  transition: border-color 0.2s;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.goal-card:hover {
+  border-color: rgba(232, 168, 56, 0.3);
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12);
 }
 
 .goal-card.expanded {
-  border-color: rgba(var(--cat-rgb, 232,168,56), 0.5);
+  border-color: rgba(232, 168, 56, 0.25);
+  box-shadow: 0 0 20px rgba(232, 168, 56, 0.1);
 }
 
 .goal-card-header {
@@ -2717,18 +3014,35 @@ nav.site-nav {
 .goal-progress-bar {
   flex: 1;
   position: relative;
-  height: 5px;
-  background: var(--border);
-  border-radius: 3px;
+  height: 2px;
+  background: rgba(232,168,56,0.1);
+  border-radius: 2px;
   overflow: visible;
 }
 
 .goal-progress-fill {
   height: 100%;
   background: var(--cat, #e8a838);
-  border-radius: 3px;
+  border-radius: 2px;
   transition: width 0.3s ease;
   min-width: 0;
+  position: relative;
+  box-shadow: 0 0 7px var(--cat, #e8a838), 0 0 2px var(--cat, #e8a838);
+}
+
+/* Pulsing leading-edge dot — mirrors the bento-goal-fill::after from overview */
+.goal-progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  width: 4px;
+  height: 8px;
+  background: var(--cat, #e8a838);
+  border-radius: 2px;
+  filter: brightness(1.5);
+  box-shadow: 0 0 6px var(--cat, #e8a838);
+  animation: progress-pulse 2.4s ease-in-out infinite;
 }
 
 /* Threshold tick mark on a progress bar */
@@ -3464,6 +3778,304 @@ nav.site-nav {
 }
 
 /* ============================================================
+   NEWS WIDGET — DASHBOARD
+   ============================================================ */
+
+/* ── News widget — vertical headline list ── */
+
+/* Scrollable article list */
+.bento-news-articles {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+.bento-news-articles::-webkit-scrollbar       { width: 3px; }
+.bento-news-articles::-webkit-scrollbar-track { background: transparent; }
+.bento-news-articles::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+/* One headline row */
+.bento-news-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+}
+.bento-news-row:last-child { border-bottom: none; }
+.bento-news-row:hover .bento-news-row-title { color: #e8a838; }
+
+/* Full article title — no clamping */
+.bento-news-row-title {
+  font-size: 0.83rem;
+  line-height: 1.45;
+  color: var(--text);
+  transition: color 0.15s;
+}
+
+/* Source · time meta */
+.bento-news-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+.bento-news-source {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #e8a838;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+.bento-news-dot {
+  font-size: 0.5rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.bento-news-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Refresh button */
+.bento-news-refresh {
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+}
+.bento-news-refresh:hover:not(:disabled) { color: #e8a838; background: rgba(232,168,56,0.1); }
+.bento-news-refresh:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@keyframes bento-news-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton rows */
+.bento-news-skeleton { pointer-events: none; gap: 0.4rem; }
+
+.bento-news-skel-title,
+.bento-news-skel-meta {
+  border-radius: 3px;
+  background: rgba(255,255,255,0.07);
+  animation: bento-news-pulse 1.4s ease-in-out infinite;
+}
+.bento-news-skel-title        { height: 10px; width: 100%; }
+.bento-news-skel-title--short { height: 10px; width: 72%; }
+.bento-news-skel-meta         { height: 8px;  width: 38%; margin-top: 0.1rem; }
+
+@keyframes bento-news-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 0.2; }
+}
+
+/* Boot sequence animations removed — see dashboard.css for static dashboard styles */
+
+/* ============================================================
+   JARVIS DESIGN — ALL DASHBOARD PAGES
+   Applies the HUD visual language to wins / goals / ooo / wishlist.
+   Purely additive — no functionality changes.
+   ============================================================ */
+
+/* page-fade-in removed — no JS-triggered transitions */
+
+/* Modal cards get frosted glass too */
+.modal-card {
+  background: rgba(9, 12, 18, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232,168,56,0.2);
+  box-shadow: 0 0 0 1px rgba(232,168,56,0.06) inset, 0 24px 80px rgba(0,0,0,0.7), 0 0 80px rgba(232,168,56,0.06);
+}
+
+/* Modals also share the amber glow border on top */
+.modal-header {
+  border-bottom-color: rgba(232,168,56,0.14);
+}
+
+/* btn-secondary gets glow on hover across all pages */
+.btn-secondary {
+  border-color: rgba(232,168,56,0.2);
+}
+.btn-secondary:hover {
+  border-color: rgba(232,168,56,0.55);
+  color: var(--accent);
+  box-shadow: 0 0 14px rgba(232,168,56,0.15);
+}
+
+/* btn-primary hover — stronger amber glow */
+.btn-primary:hover {
+  background: #f0b84d;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232,168,56,0.3), 0 0 40px rgba(232,168,56,0.15);
+}
+
+/* Input / select / textarea — HUD feel */
+.wins-input,
+.wins-select,
+.wins-textarea {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(232,168,56,0.12);
+}
+.wins-input:focus,
+.wins-select:focus,
+.wins-textarea:focus {
+  border-color: rgba(232,168,56,0.45);
+  box-shadow: 0 0 0 3px rgba(232,168,56,0.06);
+  outline: none;
+}
+
+/* Goal card header hover matches HUD cards */
+.goal-card-header:hover {
+  background: rgba(255,255,255,0.018);
+}
+
+/* Goal card body divider — amber-tinted */
+.goal-card-body {
+  border-top-color: rgba(232,168,56,0.1);
+}
+
+/* ooo card body divider */
+.ooo-card-body {
+  border-top-color: rgba(232,168,56,0.1);
+}
+
+/* Wins filter heading labels — amber tint like card labels */
+.wins-form-heading,
+.ooo-field-label {
+  color: rgba(232,168,56,0.55);
+}
+
+/* Win-card date + category badges — sharper mono look */
+.win-date {
+  letter-spacing: 0.08em;
+}
+
+/* Wishlist combo dropdown glass */
+.wl-combo-dropdown {
+  background: rgba(9, 12, 18, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: rgba(232,168,56,0.3);
+}
+
+/* Wishlist price — amber projection */
+.wl-card-price {
+  text-shadow: 0 0 10px rgba(232,168,56,0.4);
+}
+
+/* Wishlist name — slight glow on hover */
+.wl-card:hover .wl-card-name {
+  color: var(--text-bright);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-content { animation: none; }
+  .bento-goal-fill::after,
+  .goal-progress-fill::after { animation: none; }
+}
+
+/* ============================================================
+   HUD THEME — KEYFRAMES & GLOBAL OVERRIDES
+   ============================================================ */
+
+/* Animated background grid pan */
+@keyframes hud-grid-pan {
+  from { background-position: 0 0; }
+  to   { background-position: 52px 52px; }
+}
+
+/* Pulsing leading-edge dot on sci-fi progress bars */
+@keyframes progress-pulse {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 6px currentColor; }
+  50%       { opacity: 0.3; box-shadow: 0 0 2px currentColor; }
+}
+
+/* Page title projection glow */
+.db-page-title {
+  text-shadow: 0 0 40px rgba(255,255,255,0.08);
+}
+
+/* Amber number projection — goal metrics */
+.bento-goal-metric,
+.bento-task-due:not(.overdue),
+.bento-task-progress {
+  text-shadow: 0 0 8px rgba(232,168,56,0.35);
+}
+
+/* db-sb glow rules are in the main .db-statusbar block above */
+
+/* News headline amber glow on hover */
+.bento-news-row:hover .bento-news-row-title {
+  text-shadow: 0 0 14px rgba(232,168,56,0.45);
+}
+
+/* Forecast high temp glow */
+.bento-wx-fc-hi { text-shadow: 0 0 8px rgba(255,255,255,0.15); }
+
+/* Mets record glow */
+.bento-mets-record { text-shadow: 0 0 10px rgba(255,255,255,0.12); }
+
+/* Quote text subtle glow */
+.bento-quote-text { text-shadow: 0 0 30px rgba(255,255,255,0.06); }
+
+/* Bento section divider lines — glow instead of solid */
+.goal-subtasks-label,
+.goal-subtasks-section { border-color: rgba(232,168,56,0.1); }
+
+/* Quick-add icon — more HUD */
+.bento-quick-icon {
+  border: 1px solid rgba(232,168,56,0.15);
+  box-shadow: inset 0 0 8px rgba(232,168,56,0.05);
+}
+
+/* Mets live badge keeps its blink but with glow */
+.bento-live-badge {
+  box-shadow: 0 0 8px rgba(240,120,120,0.3);
+}
+
+/* W/L result badges — glow */
+.bento-result-w { box-shadow: 0 0 8px rgba(126,203,138,0.2); }
+.bento-result-l { box-shadow: 0 0 8px rgba(240,120,120,0.2); }
+
+/* Disabled animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .db-content { animation: none; }
+  .bento-goal-fill::after { animation: none; }
+}
+
+/* Mobile: simplify heavy effects */
+@media (max-width: 600px) {
+  .db-content {
+    background-image: none;
+    animation: none;
+  }
+  .bento-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(19, 22, 29, 0.9);
+  }
+}
+
+/* ============================================================
    WISHLIST — DASHBOARD
    ============================================================ */
 
@@ -3886,17 +4498,21 @@ nav.site-nav {
 
 /* Item card */
 .wl-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(19, 22, 29, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 168, 56, 0.15);
   border-radius: 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.2s, transform 0.2s;
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05);
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
 }
 .wl-card:hover {
-  border-color: rgba(232,168,56,0.25);
+  border-color: rgba(232, 168, 56, 0.3);
   transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12);
 }
 .wl-card-purchased { opacity: 0.65; }
 
@@ -4630,8 +5246,11 @@ nav.site-nav {
 .win-card--created     { --cat: #a8d870; --cat-rgb: 168,216,112; }
 
 .win-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(19, 22, 29, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(232, 168, 56, 0.15);
+  box-shadow: 0 0 15px rgba(232, 168, 56, 0.05);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -4641,7 +5260,7 @@ nav.site-nav {
   transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* Color accent bar on top — visible on hover */
+/* Category color bar — glows on hover */
 .win-card::before {
   content: '';
   position: absolute;
@@ -4653,9 +5272,9 @@ nav.site-nav {
 }
 
 .win-card:hover {
-  border-color: rgba(var(--cat-rgb, 255,255,255), 0.25);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  border-color: rgba(232, 168, 56, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(232, 168, 56, 0.12);
 }
 
 .win-card:hover::before { opacity: 1; }
