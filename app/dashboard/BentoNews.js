@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { card, cardHover } from './styles';
 
 function timeAgo(isoStr) {
   if (!isoStr) return '';
@@ -28,6 +29,7 @@ export default function BentoNews() {
   const [articles, setArticles] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(null);
+  const [hovered,  setHovered]  = useState(false);
 
   const load = useCallback(async (force = false) => {
     setLoading(true);
@@ -47,7 +49,12 @@ export default function BentoNews() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <div className="bento-card bento-news">
+    <div
+      className="bento-news"
+      style={hovered ? cardHover : card}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="bento-card-header">
         <span className="bento-card-label">News</span>
         <button

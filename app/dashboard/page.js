@@ -6,6 +6,8 @@ import { fetchMets } from '../lib/mets';
 import { fetchCalendarEvents } from '../lib/calendar';
 import BentoNews from './BentoNews';
 import CountUp from './CountUp';
+import CalTimeline from './CalTimeline';
+import BentoCard from './BentoCard';
 
 export const metadata = { title: 'Overview — Dashboard' };
 export const dynamic  = 'force-dynamic';
@@ -107,40 +109,6 @@ function IconCalendar() {
   );
 }
 
-// ── Calendar event renderer ──────────────────────────────────
-const GCal_COLORS = {
-  '1': '#a4bdfc', '2': '#7ae7bf', '3': '#dbadff', '4': '#ff887c',
-  '5': '#fbd75b', '6': '#ffb878', '7': '#46d6db', '8': '#e1e1e1',
-  '9': '#5484ed', '10': '#51b749', '11': '#dc2127',
-};
-function CalEventList({ events, emptyText }) {
-  if (!events.length) return <p className="cal-empty">{emptyText}</p>;
-  return (
-    <ul className="cal-event-list">
-      {events.map((ev) => {
-        // Priority: event-specific color → calendar color → default amber
-        const accentColor = ev.color
-          ? (GCal_COLORS[ev.color] ?? ev.calendarAccent ?? '#e8a838')
-          : (ev.calendarAccent ?? '#e8a838');
-        return (
-          <li key={ev.id} className="cal-event" style={{ '--cal-accent': accentColor }}>
-            <span className="cal-event-time">
-              {ev.isAllDay ? 'All day' : `${ev.startTime}${ev.endTime ? ` – ${ev.endTime}` : ''}`}
-            </span>
-            <span className="cal-event-title">{ev.title}</span>
-            {ev.location && <span className="cal-event-loc">{ev.location}</span>}
-            {ev.calendarLabel && (
-              <span className="cal-cal-name" style={{ color: ev.calendarAccent ?? '#e8a838' }}>
-                {ev.calendarLabel}
-              </span>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
 // ── Page ─────────────────────────────────────────────────────
 export default async function DashboardOverview() {
   const [wins, goals, quote, weather, mets, calendar] = await Promise.all([
@@ -184,49 +152,17 @@ export default async function DashboardOverview() {
         <h1 className="db-page-title">Welcome back, Ted.</h1>
       </div>
 
-      <div className="bento-grid">
+      <div className="overview-layout">
 
-        {/* ── ROW 1: CALENDAR (~40%) ── */}
-        <div className="bento-card bento-calendar">
-          <div className="bento-card-header">
-            <span className="bento-card-label">
-              <span className="cal-icon"><IconCalendar /></span>
-              Google Calendar
-            </span>
-            {calendar.connected && (
-              <span className="cal-disconnect-wrap">
-                <a href="/api/auth/google/disconnect" className="bento-card-link cal-disconnect">Disconnect</a>
-              </span>
-            )}
-          </div>
-          {!calendar.connected ? (
-            <div className="cal-connect">
-              <p className="cal-connect-desc">Connect your Google Calendar to see your daily agenda here.</p>
-              <a href="/api/auth/google" className="bento-action-btn cal-connect-btn">
-                Connect Google Calendar →
-              </a>
-            </div>
-          ) : calendar.error ? (
-            <p className="bento-empty bento-error">{calendar.error}</p>
-          ) : (
-            <div className="cal-body">
-              <div className="cal-section">
-                <h3 className="cal-section-label">Today</h3>
-                <CalEventList events={calendar.today} emptyText="Nothing scheduled today" />
-              </div>
-              <div className="cal-section">
-                <h3 className="cal-section-label">Tomorrow</h3>
-                <CalEventList events={calendar.tomorrow} emptyText="Nothing scheduled tomorrow" />
-              </div>
-            </div>
-          )}
-        </div>
+        {/* ── MAIN CONTENT — left column ── */}
+        <div className="overview-main">
+          <div className="overview-main-grid">
 
-        {/* ── ROW 1: NEWS (~30%) — client component renders its own card ── */}
+        {/* News */}
         <BentoNews />
 
-        {/* ── ROW 1: WEATHER (~30%) ── */}
-        <div className="bento-card bento-weather">
+        {/* Weather */}
+        <BentoCard className="bento-weather">
           <div className="bento-card-header">
             <span className="bento-card-label">Weather · {weather.city ?? 'Farmingdale'}</span>
           </div>
@@ -270,10 +206,10 @@ export default async function DashboardOverview() {
               )}
             </>
           )}
-        </div>
+        </BentoCard>
 
         {/* ── ROW 2: GOALS — UPCOMING TASKS ── */}
-        <div className="bento-card bento-goals">
+        <BentoCard className="bento-goals">
           <div className="bento-card-header">
             <span className="bento-card-label">Upcoming Tasks</span>
             <Link href="/dashboard/goals" className="bento-card-link">All goals →</Link>
@@ -298,10 +234,10 @@ export default async function DashboardOverview() {
               ))}
             </div>
           )}
-        </div>
+        </BentoCard>
 
         {/* ── ROW 2: METS ── */}
-        <div className="bento-card bento-mets">
+        <BentoCard className="bento-mets">
           <div className="bento-card-header">
             <div className="bento-mets-title">
               <span className="bento-mets-logo">
@@ -320,22 +256,22 @@ export default async function DashboardOverview() {
             <p className="bento-empty bento-error">{mets.error}</p>
           ) : (
             <div className="bento-mets-body">
-              {mets.lastGame && (
-                <div className="bento-mets-row">
-                  <span className="bento-mets-row-label">Last</span>
-                  <span className={`bento-result-badge bento-result-${mets.lastGame.result.toLowerCase()}`}>
-                    {mets.lastGame.result}
+              {mets.recentGames?.map((g, i) => (
+                <div key={`r${i}`} className="bento-mets-row">
+                  <span className="bento-mets-row-label">{g.weekday}</span>
+                  <span className={`bento-result-badge bento-result-${g.result.toLowerCase()}`}>
+                    {g.result}
                   </span>
                   <span className="bento-mets-score">
-                    {mets.lastGame.metsScore}–{mets.lastGame.oppScore}
+                    {g.metsScore}–{g.oppScore}
                   </span>
                   <span className="bento-mets-opp">
-                    {mets.lastGame.homeAway} {mets.lastGame.opponent}
+                    {g.homeAway} {g.opponent}
                   </span>
                 </div>
-              )}
+              ))}
               {mets.upcomingGames?.map((game, i) => (
-                <div key={i} className="bento-mets-row">
+                <div key={`u${i}`} className="bento-mets-row">
                   <span className="bento-mets-row-label">{game.weekday}</span>
                   {game.isLive ? (
                     <>
@@ -351,15 +287,15 @@ export default async function DashboardOverview() {
                   )}
                 </div>
               ))}
-              {!mets.lastGame && !mets.upcomingGames?.length && (
+              {!mets.recentGames?.length && !mets.upcomingGames?.length && (
                 <p className="bento-empty">No recent games found.</p>
               )}
             </div>
           )}
-        </div>
+        </BentoCard>
 
         {/* ── ROW 2: WINS — compact ── */}
-        <div className="bento-card bento-wins">
+        <BentoCard className="bento-wins">
           <div className="bento-card-header">
             <span className="bento-card-label">Wins</span>
           </div>
@@ -375,17 +311,17 @@ export default async function DashboardOverview() {
             </div>
           </div>
           <Link href="/dashboard/wins" className="bento-action-btn">Log a Win →</Link>
-        </div>
+        </BentoCard>
 
         {/* ── ROW 3: QUOTE ── */}
-        <div className="bento-card bento-quote">
+        <BentoCard className="bento-quote" style={{ justifyContent: 'center', position: 'relative', gap: '0.5rem' }}>
           <span className="bento-quote-mark">&ldquo;</span>
           <blockquote className="bento-quote-text">{quote.q}</blockquote>
           <cite className="bento-quote-author">— {quote.a}</cite>
-        </div>
+        </BentoCard>
 
-        {/* ── ROW 3: QUICK ADD ── */}
-        <div className="bento-card bento-quick">
+        {/* ── Quick Add ── */}
+        <BentoCard className="bento-quick">
           <div className="bento-card-header">
             <span className="bento-card-label">Quick Add</span>
           </div>
@@ -403,9 +339,50 @@ export default async function DashboardOverview() {
               Add Wishlist Item
             </Link>
           </nav>
-        </div>
+        </BentoCard>
 
-      </div>
+          </div>{/* /overview-main-grid */}
+        </div>{/* /overview-main */}
+
+        {/* ── CALENDAR SIDEBAR — right column ── */}
+        <aside className="overview-cal-sidebar">
+          <div className="bento-card bento-calendar">
+            <div className="bento-card-header">
+              <span className="bento-card-label">
+                <span className="cal-icon"><IconCalendar /></span>
+                Google Calendar
+              </span>
+              {calendar.connected && (
+                <span className="cal-disconnect-wrap">
+                  <a href="/api/auth/google/disconnect" className="bento-card-link cal-disconnect">Disconnect</a>
+                </span>
+              )}
+            </div>
+            {!calendar.connected ? (
+              <div className="cal-connect">
+                <p className="cal-connect-desc">Connect your Google Calendar to see your daily agenda here.</p>
+                <a href="/api/auth/google" className="bento-action-btn cal-connect-btn">
+                  Connect Google Calendar →
+                </a>
+              </div>
+            ) : calendar.error ? (
+              <p className="bento-empty bento-error">{calendar.error}</p>
+            ) : (
+              <div className="cal-body">
+                <div className="cal-section">
+                  <h3 className="cal-section-label">Today</h3>
+                  <CalTimeline events={calendar.today} isToday />
+                </div>
+                <div className="cal-section">
+                  <h3 className="cal-section-label">Tomorrow</h3>
+                  <CalTimeline events={calendar.tomorrow} />
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+
+      </div>{/* /overview-layout */}
     </div>
   );
 }

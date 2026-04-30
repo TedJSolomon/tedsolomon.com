@@ -31,8 +31,8 @@ function shortName(fullName) {
 export async function fetchMets() {
   try {
     const today  = new Date();
-    const past   = new Date(today); past.setDate(today.getDate() - 10);
-    const future = new Date(today); future.setDate(today.getDate() + 10);
+    const past   = new Date(today); past.setDate(today.getDate() - 21);
+    const future = new Date(today); future.setDate(today.getDate() + 14);
     const season = today.getFullYear();
 
     const [schedRes, standRes] = await Promise.all([
@@ -67,7 +67,7 @@ export async function fetchMets() {
     }
 
     // ── Games ────────────────────────────────────────────────────────────────
-    let lastGame     = null;
+    let recentGames  = [];
     let upcomingGames = [];
 
     if (schedRes.ok) {
@@ -86,25 +86,26 @@ export async function fetchMets() {
                g.status?.abstractGameState === 'Live'
       );
 
-      // Most recent completed game
-      if (finals.length) {
-        const g        = finals[finals.length - 1];
-        const metsHome = g.teams.home.team.id === METS_ID;
+      // Last 3 completed games, most recent first
+      recentGames = finals.slice(-3).reverse().map((g) => {
+        const metsHome  = g.teams.home.team.id === METS_ID;
         const metsScore = metsHome ? g.teams.home.score : g.teams.away.score;
         const oppScore  = metsHome ? g.teams.away.score : g.teams.home.score;
         const opp       = metsHome ? g.teams.away.team.name : g.teams.home.team.name;
-        lastGame = {
-          date:      g.dateStr,
-          opponent:  shortName(opp),
+        const parts     = fmtGameParts(g.gameDate);
+        return {
+          weekday:  parts.weekday,
+          date:     parts.date,
+          opponent: shortName(opp),
           metsScore,
           oppScore,
-          result:    metsScore > oppScore ? 'W' : 'L',
-          homeAway:  metsHome ? 'vs' : '@',
+          result:   metsScore > oppScore ? 'W' : 'L',
+          homeAway: metsHome ? 'vs' : '@',
         };
-      }
+      });
 
-      // Next 5 upcoming / live games
-      upcomingGames = upcoming.slice(0, 5).map((g) => {
+      // Next 8 upcoming / live games
+      upcomingGames = upcoming.slice(0, 8).map((g) => {
         const metsHome = g.teams.home.team.id === METS_ID;
         const isLive   = g.status?.abstractGameState === 'Live';
         const opp      = metsHome ? g.teams.away.team.name : g.teams.home.team.name;
@@ -124,7 +125,7 @@ export async function fetchMets() {
       });
     }
 
-    return { record, lastGame, upcomingGames };
+    return { record, recentGames, upcomingGames };
   } catch (err) {
     return { error: err.message };
   }

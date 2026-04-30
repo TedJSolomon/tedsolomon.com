@@ -1,11 +1,24 @@
 /**
  * Google Calendar API helpers — server-side only.
- * Fetches events from the primary calendar and "the bun calendar" (if found),
- * merges them, and returns today/tomorrow split.
+ *
+ * Fetches events from three sources:
+ *   1. Primary calendar (discovered via OAuth token)
+ *   2. "The Bun Calendar" (discovered via calendarList name match)
+ *   3. Beck Tech Outlook calendar (hard-coded ID — shows as "Calendar" in the API
+ *      but is Ted's work Outlook calendar imported from Exchange)
  */
 import { getValidAccessToken, deleteTokens } from './googleAuth';
 
 const BASE = 'https://www.googleapis.com/calendar/v3';
+
+// Hard-coded calendar IDs that can't be reliably found by name
+const HARDCODED_CALENDARS = [
+  {
+    id:     '3jc1ea8ah2banc99udfmug7tilfd4boc@import.calendar.google.com',
+    label:  'BECK TECH',
+    accent: '#7eb8f7', // blue accent to distinguish from personal events
+  },
+];
 
 function toNYTime(iso) {
   if (!iso) return null;
@@ -34,9 +47,9 @@ function mapEvent(ev, calendarKey, calendarLabel, calendarAccent) {
     startTime:       isAllDay ? null : toNYTime(startIso),
     endTime:         isAllDay ? null : toNYTime(endIso),
     color:           ev.colorId ?? null,
-    calendarKey,    // 'primary' | 'bun'
-    calendarLabel,  // null for primary, calendar name string for others
-    calendarAccent, // hex color for left-border accent, null for primary
+    calendarKey,
+    calendarLabel,  // null = primary (no badge), string = show badge
+    calendarAccent, // hex for left-border and badge color
   };
 }
 
@@ -74,34 +87,45 @@ export async function fetchCalendarEvents() {
       maxResults:   '50',
     });
 
-    // Calendar names to look up (case-insensitive substring match)
-    const NAMED_CALENDARS = ['The Bun Calendar', 'Beck Tech'];
-
-    // ── 1. Discover calendars via calendarList ────────────────────────────────
-    let namedCals = []; // [{ id, summary, backgroundColor }, ...]
+    // ── 1. Discover named calendars via calendarList ──────────────────────────
+    const NAMED_CALENDAR_PATTERNS = ['The Bun Calendar'];
+    let namedCals = [];
     try {
       const calListRes = await fetch(`${BASE}/users/me/calendarList`, {
         headers,
         cache: 'no-store',
       });
       if (calListRes.ok) {
-        const calListData = await calListRes.json();
-        const items = calListData.items ?? [];
-        for (const name of NAMED_CALENDARS) {
+        const items = (await calListRes.json()).items ?? [];
+
+        console.log('[calendar] calendarList — all calendars:');
+        for (const c of items) {
+          console.log(`  ${c.primary ? '[PRIMARY]' : '         '} "${c.summary}" → ${c.id}`);
+        }
+
+        for (const pattern of NAMED_CALENDAR_PATTERNS) {
           const match = items.find(
-            (c) => !c.primary && c.summary?.toLowerCase().includes(name.toLowerCase())
+            (c) => !c.primary && c.summary?.trim().toLowerCase().includes(pattern.trim().toLowerCase())
           );
-          if (match) namedCals.push(match);
+          if (match) {
+            console.log(`[calendar] ✓ matched "${pattern}" → "${match.summary}" (${match.id})`);
+            namedCals.push({ id: match.id, label: match.summary, accent: match.backgroundColor ?? '#F6BF26' });
+          } else {
+            console.log(`[calendar] ✗ no match for "${pattern}"`);
+          }
         }
       }
     } catch {
-      // calendarList failure is non-fatal — fall back to primary only
+      // calendarList failure is non-fatal
     }
 
-    // ── 2. Fetch events from all calendars in parallel ────────────────────────
+    // Combine discovered + hard-coded calendars
+    const allExtraCalendars = [...namedCals, ...HARDCODED_CALENDARS];
+
+    // ── 2. Fetch events from primary + all extra calendars in parallel ─────────
     const fetches = [
       fetch(`${BASE}/calendars/primary/events?${params}`, { headers, cache: 'no-store' }),
-      ...namedCals.map((cal) =>
+      ...allExtraCalendars.map((cal) =>
         fetch(
           `${BASE}/calendars/${encodeURIComponent(cal.id)}/events?${params}`,
           { headers, cache: 'no-store' }
@@ -109,9 +133,8 @@ export async function fetchCalendarEvents() {
       ),
     ];
 
-    const [primaryRes, ...namedRes] = await Promise.all(fetches);
+    const [primaryRes, ...extraRes] = await Promise.all(fetches);
 
-    // 401 on primary = revoked token
     if (primaryRes.status === 401) {
       await deleteTokens();
       return { connected: false };
@@ -121,7 +144,7 @@ export async function fetchCalendarEvents() {
       return { connected: true, error: err?.error?.message ?? `Calendar API ${primaryRes.status}` };
     }
 
-    // ── 3. Merge events from all calendars ────────────────────────────────────
+    // ── 3. Merge and sort ─────────────────────────────────────────────────────
     const allItems = [];
 
     const primaryData = await primaryRes.json();
@@ -129,18 +152,20 @@ export async function fetchCalendarEvents() {
       allItems.push(mapEvent(ev, 'primary', null, null));
     }
 
-    for (let i = 0; i < namedCals.length; i++) {
-      const res = namedRes[i];
-      if (!res?.ok) continue;
-      const data   = await res.json();
-      const cal    = namedCals[i];
-      const accent = cal.backgroundColor ?? '#F6BF26';
+    for (let i = 0; i < allExtraCalendars.length; i++) {
+      const res = extraRes[i];
+      if (!res?.ok) {
+        console.log(`[calendar] ✗ failed to fetch events for "${allExtraCalendars[i].label}" (${res?.status})`);
+        continue;
+      }
+      const data = await res.json();
+      const cal  = allExtraCalendars[i];
+      console.log(`[calendar] ✓ fetched ${data.items?.length ?? 0} events from "${cal.label}"`);
       for (const ev of data.items ?? []) {
-        allItems.push(mapEvent(ev, cal.id, cal.summary, accent));
+        allItems.push(mapEvent(ev, cal.id, cal.label, cal.accent));
       }
     }
 
-    // Sort merged list by start ISO string (all-day "YYYY-MM-DD" sorts before dateTime of same day)
     allItems.sort((a, b) => (a.startIso ?? '').localeCompare(b.startIso ?? ''));
 
     const today    = allItems.filter((e) => e.startDate === todayDateStr);
