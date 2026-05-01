@@ -53,6 +53,18 @@ function MomentumGauge({ pct }) {
   );
 }
 
+// ── Streak milestone label ────────────────────────────────────────────────────
+function streakMilestone(n) {
+  if (n >= 100) return 'Legendary';
+  if (n >= 60)  return 'Relentless';
+  if (n >= 30)  return 'Unstoppable';
+  if (n >= 14)  return 'On a roll';
+  if (n >= 7)   return '1 week strong';
+  if (n >= 3)   return 'Building momentum';
+  if (n >= 1)   return 'Getting started';
+  return null;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getGreeting(hourET) {
   if (hourET >= 5  && hourET < 12) return 'Good morning, Ted';
@@ -151,8 +163,24 @@ export default function StatusBar() {
 
       <span className="db-sb-metric" title={`${streak}-day win streak`}>
         <span className="db-sb-metric-icon" aria-hidden="true">&#128293;</span>
-        <span className="db-sb-metric-val">{streak}</span>
-        <span className="db-sb-metric-label">streak</span>
+        <span style={{ display: 'flex', flexDirection: 'column', gap: '1px', lineHeight: 1 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span className="db-sb-metric-val">{streak}</span>
+            <span className="db-sb-metric-label">streak</span>
+          </span>
+          {streakMilestone(streak) && (
+            <span style={{
+              fontSize: '0.5rem',
+              color: '#e8a838',
+              letterSpacing: '0.07em',
+              textTransform: 'uppercase',
+              opacity: 0.8,
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>
+              {streakMilestone(streak)}
+            </span>
+          )}
+        </span>
       </span>
 
       <span className="db-sb-metric" title={`Weekly momentum: ${momentum}%`}>

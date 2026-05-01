@@ -43,6 +43,15 @@ CREATE TABLE IF NOT EXISTS google_tokens (
   updated_at    timestamptz NOT NULL DEFAULT now()
 );
 
+-- daily_focus
+CREATE TABLE IF NOT EXISTS daily_focus (
+  date       date        PRIMARY KEY,
+  priority_1 text,
+  priority_2 text,
+  priority_3 text,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 -- one_on_ones
 CREATE TABLE IF NOT EXISTS one_on_ones (
   id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
