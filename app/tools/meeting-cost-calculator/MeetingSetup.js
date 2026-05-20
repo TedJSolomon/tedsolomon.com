@@ -1,6 +1,7 @@
 'use client';
 
 import AttendeeSelector from './AttendeeSelector';
+import OptimizationTips from './OptimizationTips';
 import { meetingCost, annualizedCost, formatCurrency, costPerMinute } from './lib/cost';
 
 const MEETING_TYPES = [
@@ -11,7 +12,7 @@ const MEETING_TYPES = [
   { value: 'daily',     label: 'Daily' },
 ];
 
-export default function MeetingSetup({ attendees, setAttendees, duration, setDuration, meetingType, setMeetingType, onStart }) {
+export default function MeetingSetup({ attendees, setAttendees, duration, setDuration, meetingType, setMeetingType, title, setTitle, tone, onStart }) {
   const cpm = costPerMinute(attendees);
   const projected = meetingCost(attendees, duration);
   const annual = annualizedCost(projected, meetingType);
@@ -55,6 +56,16 @@ export default function MeetingSetup({ attendees, setAttendees, duration, setDur
             ))}
           </select>
         </div>
+        <div className="mcc-field mcc-field--grow">
+          <label className="mcc-label">Meeting title (optional)</label>
+          <input
+            className="mcc-input"
+            type="text"
+            placeholder="e.g. Weekly Standup"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
       </div>
 
       {attendees.length > 0 && (
@@ -75,6 +86,13 @@ export default function MeetingSetup({ attendees, setAttendees, duration, setDur
           )}
         </div>
       )}
+
+      <OptimizationTips
+        attendees={attendees}
+        duration={duration}
+        meetingType={meetingType}
+        tone={tone}
+      />
 
       <button
         className="btn-primary mcc-start-btn"

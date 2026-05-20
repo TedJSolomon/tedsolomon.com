@@ -581,3 +581,224 @@
     font-size: 3.5rem;
   }
 }
+
+/* ─── Hero eyebrow + tone toggle ──────────────────────────── */
+.mcc-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mcc-tone-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.mcc-tone-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 5px 12px;
+  border-radius: 5px;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mcc-tone-btn:hover {
+  color: var(--text);
+}
+
+.mcc-tone-btn--active {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-card));
+  color: var(--accent);
+}
+
+/* ─── Optimization tips ───────────────────────────────────── */
+.mcc-tips {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 28px;
+}
+
+.mcc-tips-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mcc-tips-annual-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.67rem;
+  color: var(--text-dim);
+}
+
+.mcc-tips-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mcc-tip-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.mcc-tip-item::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+/* ─── Meeting receipt ─────────────────────────────────────── */
+.mcc-receipt {
+  margin-bottom: 28px;
+}
+
+.mcc-receipt-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mcc-receipt-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-accent);
+  border-radius: 12px;
+  padding: 24px 24px 20px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.mcc-receipt-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mcc-receipt-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.2rem;
+  color: var(--text-bright);
+}
+
+.mcc-receipt-date {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.mcc-receipt-divider {
+  border: none;
+  border-top: 1px dashed color-mix(in srgb, var(--border) 200%, transparent);
+  margin: 14px 0;
+}
+
+.mcc-receipt-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mcc-receipt-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.mcc-receipt-row span:last-child {
+  color: var(--text);
+}
+
+.mcc-receipt-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.mcc-receipt-total-val {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.mcc-receipt-delta {
+  font-size: 0.75rem;
+  padding: 7px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.mcc-receipt-delta--saved {
+  background: color-mix(in srgb, #38c96b 10%, transparent);
+  color: #38c96b;
+}
+
+.mcc-receipt-delta--over {
+  background: color-mix(in srgb, #e85c38 10%, transparent);
+  color: #e85c38;
+}
+
+.mcc-receipt-comparison {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.mcc-receipt-footer {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ─── Misc fixes ──────────────────────────────────────────── */
+.mcc-field--grow {
+  flex: 1;
+  min-width: 180px;
+}
+
+@media (max-width: 600px) {
+  .mcc-hero-eyebrow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mcc-receipt-card-head {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
