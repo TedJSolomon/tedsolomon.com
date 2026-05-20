@@ -3,7 +3,7 @@ import Footer from '../components/Footer';
 
 export const metadata = {
   title: 'Projects — Ted Solomon',
-  description: 'Projects by Ted Solomon — Vision Quest newsletter and Catalyft mobile app.',
+  description: 'Projects by Ted Solomon — Vision Quest newsletter, Catalyft mobile app, and Meeting Cost Calculator.',
 };
 
 export default function Projects() {
@@ -58,6 +58,29 @@ export default function Projects() {
             <span className="tag">Fitness</span>
           </div>
           <a href="#" className="btn-secondary">Coming to the App Store →</a>
+        </div>
+      </section>
+
+      <section className="project-full">
+        <div className="section-label">Tool</div>
+        <div>
+          <h2 className="project-full-name">Meeting Cost Calculator</h2>
+          <p className="project-full-desc">
+            See what your meetings really cost. A real-time cost ticker that calculates the true
+            dollar value of every minute spent in a room — based on actual attendee salaries.
+          </p>
+          <p className="project-full-desc">
+            Built with a pre-loaded demo company of 175+ employees across 8 departments. Pick
+            your attendees, set a duration, hit start, and watch the cost tick up in real time.
+            One-time or recurring — with annualized cost projections.
+          </p>
+          <div className="project-full-tags">
+            <span className="tag">React</span>
+            <span className="tag">Next.js</span>
+            <span className="tag">Real-time</span>
+            <span className="tag">Productivity</span>
+          </div>
+          <a href="/tools/meeting-cost-calculator" className="btn-secondary">Open Calculator →</a>
         </div>
       </section>
 
