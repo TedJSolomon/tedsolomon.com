@@ -542,41 +542,142 @@ function JobRow({ job }) {
 
 // ── Main export ──────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 25;
+
 export default function TranscriptionClient({ jobs }) {
+  // Distinct years present in the data, most recent first
+  const years = [...new Set(jobs.map(j => j.date?.slice(0, 4)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+
+  const currentYear   = String(new Date().getFullYear());
+  const defaultYear   = years.includes(currentYear) ? currentYear : (years[0] ?? currentYear);
+  const [selectedYear, setSelectedYear] = useState(defaultYear);
+  const [page, setPage] = useState(1);
+
+  const yearJobs   = jobs.filter(j => j.date?.startsWith(selectedYear));
+  const totalPages = Math.max(1, Math.ceil(yearJobs.length / PAGE_SIZE));
+  const safePage   = Math.min(page, totalPages);
+  const pageJobs   = yearJobs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  function handleYearChange(y) {
+    setSelectedYear(y);
+    setPage(1);
+  }
+
+  const selectStyle = {
+    background:   'rgba(8, 10, 14, 0.7)',
+    border:       `1px solid ${BORDER}`,
+    borderRadius: '6px',
+    color:        TEXT,
+    padding:      '0.28rem 0.6rem',
+    fontSize:     '0.82rem',
+    fontFamily:   'inherit',
+    cursor:       'pointer',
+    outline:      'none',
+  };
+
+  const pageBtnStyle = (disabled) => ({
+    background:   'none',
+    border:       `1px solid ${disabled ? 'rgba(232,168,56,0.1)' : BORDER}`,
+    borderRadius: '6px',
+    color:        disabled ? 'rgba(122,120,112,0.35)' : DIM,
+    fontSize:     '0.8rem',
+    fontFamily:   "'JetBrains Mono', monospace",
+    padding:      '0.3rem 0.8rem',
+    cursor:       disabled ? 'default' : 'pointer',
+    letterSpacing:'0.04em',
+  });
+
   return (
-    <div style={{ maxWidth: '680px' }}>
+    <div>
 
       <AddJobForm />
 
+      {/* List header: label + year selector */}
       <div style={{
-        fontSize: '0.7rem',
-        textTransform: 'uppercase',
-        letterSpacing: '0.18em',
-        color: DIM,
-        fontFamily: "'JetBrains Mono', monospace",
-        marginBottom: '1rem',
+        display:       'flex',
+        alignItems:    'center',
+        gap:           '0.9rem',
+        marginBottom:  '1rem',
+        flexWrap:      'wrap',
       }}>
-        // {jobs.length} job{jobs.length !== 1 ? 's' : ''} logged
+        <div style={{
+          fontSize:      '0.7rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.18em',
+          color:         DIM,
+          fontFamily:    "'JetBrains Mono', monospace',",
+        }}>
+          // {yearJobs.length} job{yearJobs.length !== 1 ? 's' : ''} in {selectedYear}
+        </div>
+
+        {years.length > 0 && (
+          <select value={selectedYear} onChange={e => handleYearChange(e.target.value)} style={selectStyle}>
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        )}
       </div>
 
-      {jobs.length === 0 ? (
+      {/* Job list */}
+      {yearJobs.length === 0 ? (
         <div style={{
-          padding: '2rem',
-          textAlign: 'center',
-          color: DIM,
-          background: CARD,
-          border: `1px solid ${BORDER}`,
+          padding:      '2rem',
+          textAlign:    'center',
+          color:        DIM,
+          background:   CARD,
+          border:       `1px solid ${BORDER}`,
           borderRadius: '8px',
-          fontSize: '0.9rem',
+          fontSize:     '0.9rem',
         }}>
-          No jobs logged yet. Use the form above to add the first one.
+          {jobs.length === 0
+            ? 'No jobs logged yet. Use the form above to add the first one.'
+            : `No jobs logged for ${selectedYear}.`}
         </div>
       ) : (
-        <div>
-          {jobs.map(job => (
-            <JobRow key={job.id} job={job} />
-          ))}
-        </div>
+        <>
+          <div>
+            {pageJobs.map(job => (
+              <JobRow key={job.id} job={job} />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'space-between',
+              marginTop:      '1.25rem',
+              padding:        '0.75rem 0',
+              borderTop:      `1px solid ${BORDER}`,
+            }}>
+              <button
+                type="button"
+                disabled={safePage === 1}
+                onClick={() => setPage(p => p - 1)}
+                style={pageBtnStyle(safePage === 1)}
+              >
+                ← Prev
+              </button>
+
+              <span style={{
+                fontSize:   '0.75rem',
+                color:      DIM,
+                fontFamily: "'JetBrains Mono', monospace",
+              }}>
+                Page {safePage} of {totalPages}
+              </span>
+
+              <button
+                type="button"
+                disabled={safePage === totalPages}
+                onClick={() => setPage(p => p + 1)}
+                style={pageBtnStyle(safePage === totalPages)}
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       )}
 
     </div>
