@@ -156,6 +156,18 @@ function parseCSV(text) {
 
     row.computed_total = calcPay(row);
     row.match = Math.abs(row.computed_total - csv_total) < 0.005;
+
+    // Fallback: if multiplier > 1 and the Fee already encodes the doubled amount,
+    // the CSV total matches multiplier=1. Store multiplier=1 so the formula stays self-consistent.
+    if (!row.match && row.per_diem_multiplier > 1) {
+      const altTotal = calcPay({ ...row, per_diem_multiplier: 1 });
+      if (Math.abs(altTotal - csv_total) < 0.005) {
+        row.per_diem_multiplier = 1;
+        row.computed_total = altTotal;
+        row.match = true;
+      }
+    }
+
     rows.push(row);
   }
 
