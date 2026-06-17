@@ -11,6 +11,7 @@ import CountUp from './CountUp';
 import CalTimeline from './CalTimeline';
 import BentoCard from './BentoCard';
 import DailyFocus from './DailyFocus';
+import TranscriptionWidget from './TranscriptionWidget';
 
 export const metadata = { title: 'Overview — Dashboard' };
 export const dynamic  = 'force-dynamic';
@@ -220,6 +221,38 @@ async function getTodayFocus() {
   }
 }
 
+// ── Transcription stats for overview widget ──────────────────
+async function getTranscriptionStats() {
+  try {
+    const supabase = createServerClient();
+    const year = new Date().getFullYear();
+    const { data } = await supabase
+      .from('transcription_jobs')
+      .select('date, job_type, pages, per_page_rate, proofreading, proofreading_rate, per_diem, per_diem_multiplier, bust_rate')
+      .gte('date', `${year}-01-01`)
+      .lte('date', `${year}-12-31`);
+    if (!data?.length) return null;
+    function pay(j) {
+      if (j.job_type === 'bust') return Number(j.bust_rate);
+      const rate = Number(j.per_page_rate) - (j.proofreading ? Number(j.proofreading_rate) : 0);
+      return Number(j.pages) * rate + Number(j.per_diem) * Number(j.per_diem_multiplier);
+    }
+    const ytd = data.reduce((s, j) => s + pay(j), 0);
+    const now = new Date();
+    const daysElapsed = Math.max(1, Math.floor((now - new Date(year, 0, 1)) / 86_400_000) + 1);
+    const daysInYear = (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 366 : 365;
+    const projected = Math.round((ytd / daysElapsed) * daysInYear);
+    const thisMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const monthName = now.toLocaleString('en-US', { month: 'short' });
+    const monthTotal = Math.round(
+      data.filter(j => j.date?.slice(5, 7) === thisMonth).reduce((s, j) => s + pay(j), 0)
+    );
+    return { projected, monthTotal, monthName };
+  } catch {
+    return null;
+  }
+}
+
 // ── Icons ────────────────────────────────────────────────────
 function IconWin() {
   return (
@@ -259,7 +292,7 @@ function IconCalendar() {
 
 // ── Page ─────────────────────────────────────────────────────
 export default async function DashboardOverview() {
-  const [wins, goals, quote, weather, mets, calendar, ooos, dailyFocusData] = await Promise.all([
+  const [wins, goals, quote, weather, mets, calendar, ooos, dailyFocusData, transcriptionStats] = await Promise.all([
     getAllWins(),
     getAllGoals(),
     getQuote(),
@@ -268,6 +301,7 @@ export default async function DashboardOverview() {
     fetchCalendarEvents().catch(() => ({ connected: false })),
     getAllOOOs().catch(() => []),
     getTodayFocus(),
+    getTranscriptionStats().catch(() => null),
   ]);
 
   const today     = todayET();
@@ -671,6 +705,14 @@ export default async function DashboardOverview() {
                 </Link>
               </nav>
             </BentoCard>
+
+            {/* ── JANA'S WORK ── */}
+            <TranscriptionWidget
+              projected={transcriptionStats?.projected}
+              monthTotal={transcriptionStats?.monthTotal}
+              monthName={transcriptionStats?.monthName}
+              style={{ gridColumn: '1 / 3' }}
+            />
 
           </div>{/* /overview-main-grid */}
         </div>{/* /overview-main */}
