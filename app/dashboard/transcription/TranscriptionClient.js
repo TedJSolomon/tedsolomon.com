@@ -420,11 +420,40 @@ function formatDate(dateStr) {
   });
 }
 
+// EditJobForm owns its own useActionState so it always mounts with fresh state {}.
+// Previously useActionState lived in JobRow (which stays mounted), so after a
+// successful save editState was { success: true }. Re-opening the editor mounted
+// JobForm with that stale success state, the useEffect fired immediately and called
+// onSuccess() — closing the editor in the same frame it opened.
+function EditJobForm({ job, onClose }) {
+  const boundUpdate = updateJob.bind(null, job.id);
+  const [editState, editAction, editPending] = useActionState(boundUpdate, {});
+  return (
+    <div style={{
+      background: 'rgba(19,22,29,0.97)',
+      border: `1px solid ${BORDER}`,
+      borderRadius: '8px',
+      padding: '1.25rem',
+      marginTop: '-0.4rem',
+      marginBottom: '0.6rem',
+    }}>
+      <div style={{ fontSize: '0.7rem', color: DIM, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.1em', marginBottom: '1rem' }}>
+        // Editing {formatDate(job.date)}
+      </div>
+      <JobForm
+        defaults={job}
+        action={editAction}
+        pending={editPending}
+        state={editState}
+        onSuccess={onClose}
+      />
+    </div>
+  );
+}
+
 function JobRow({ job }) {
   const [editing, setEditing] = useState(false);
   const [deletePending, startDelete] = useTransition();
-  const boundUpdate = updateJob.bind(null, job.id);
-  const [editState, editAction, editPending] = useActionState(boundUpdate, {});
 
   const total = calcPay(job);
 
@@ -516,25 +545,7 @@ function JobRow({ job }) {
       </div>
 
       {editing && (
-        <div style={{
-          background: 'rgba(19,22,29,0.97)',
-          border: `1px solid ${BORDER}`,
-          borderRadius: '8px',
-          padding: '1.25rem',
-          marginTop: '-0.4rem',
-          marginBottom: '0.6rem',
-        }}>
-          <div style={{ fontSize: '0.7rem', color: DIM, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.1em', marginBottom: '1rem' }}>
-            // Editing {formatDate(job.date)}
-          </div>
-          <JobForm
-            defaults={job}
-            action={editAction}
-            pending={editPending}
-            state={editState}
-            onSuccess={() => setEditing(false)}
-          />
-        </div>
+        <EditJobForm job={job} onClose={() => setEditing(false)} />
       )}
     </>
   );
