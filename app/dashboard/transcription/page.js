@@ -1,5 +1,6 @@
 import { getAllJobs } from '../../lib/transcription';
 import TranscriptionKPIs from './TranscriptionKPIs';
+import TranscriptionCharts from './TranscriptionCharts';
 import TranscriptionClient from './TranscriptionClient';
 
 export const dynamic = 'force-dynamic';
@@ -46,6 +47,7 @@ export default async function TranscriptionPage() {
       </div>
 
       <TranscriptionKPIs jobs={jobs} />
+      <TranscriptionCharts jobs={jobs} />
       <TranscriptionClient jobs={jobs} />
 
     </div>
