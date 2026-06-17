@@ -1,0 +1,584 @@
+'use client';
+
+import { useState, useActionState, useEffect, useTransition } from 'react';
+import { addJob, updateJob, deleteJob } from './actions';
+
+// ── Colors / constants ──────────────────────────────────────────────────────
+
+const AMBER  = '#e8a838';
+const BORDER = 'rgba(232, 168, 56, 0.15)';
+const BORDER_FOCUS = 'rgba(232, 168, 56, 0.5)';
+const TEXT   = '#f5f3ef';
+const DIM    = '#7a7870';
+const CARD   = 'rgba(19, 22, 29, 0.85)';
+const RED    = '#e85858';
+
+// ── Pay calculation (mirrors server lib) ────────────────────────────────────
+
+function calcPay({ job_type, pages, per_page_rate, proofreading, proofreading_rate, per_diem, per_diem_multiplier, bust_rate }) {
+  if (job_type === 'bust') return Number(bust_rate);
+  const rate = Number(per_page_rate) - (proofreading ? Number(proofreading_rate) : 0);
+  return Number(pages) * rate + Number(per_diem) * Number(per_diem_multiplier);
+}
+
+// ── Shared input style (no CSS class) ───────────────────────────────────────
+
+function inputStyle(focused) {
+  return {
+    width: '100%',
+    background: 'rgba(8, 10, 14, 0.7)',
+    border: `1px solid ${focused ? BORDER_FOCUS : BORDER}`,
+    borderRadius: '6px',
+    padding: '0.5rem 0.75rem',
+    color: TEXT,
+    fontSize: '0.9rem',
+    fontFamily: 'inherit',
+    outline: 'none',
+    boxSizing: 'border-box',
+    transition: 'border-color 0.2s',
+  };
+}
+
+function labelStyle() {
+  return {
+    display: 'block',
+    fontSize: '0.7rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.12em',
+    color: DIM,
+    marginBottom: '0.35rem',
+    fontFamily: "'JetBrains Mono', monospace",
+  };
+}
+
+// ── Focusable input wrapper ──────────────────────────────────────────────────
+
+function FInput({ label, style: extra, ...props }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      {label && <label style={labelStyle()}>{label}</label>}
+      <input
+        {...props}
+        style={{ ...inputStyle(focused), ...extra }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+    </div>
+  );
+}
+
+// ── Toggle / segmented control ───────────────────────────────────────────────
+
+function SegmentToggle({ value, onChange, options }) {
+  return (
+    <div style={{
+      display: 'inline-flex',
+      background: 'rgba(8, 10, 14, 0.7)',
+      border: `1px solid ${BORDER}`,
+      borderRadius: '8px',
+      padding: '3px',
+      gap: '2px',
+    }}>
+      {options.map(({ label, val }) => {
+        const active = value === val;
+        return (
+          <button
+            key={val}
+            type="button"
+            onClick={() => onChange(val)}
+            style={{
+              padding: '0.4rem 1.1rem',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: active ? 600 : 400,
+              fontFamily: 'inherit',
+              background: active ? AMBER : 'transparent',
+              color: active ? '#0a0b0e' : DIM,
+              transition: 'all 0.15s',
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Boolean toggle ───────────────────────────────────────────────────────────
+
+function BoolToggle({ value, onChange, label }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+      <button
+        type="button"
+        onClick={() => onChange(!value)}
+        style={{
+          width: '40px',
+          height: '22px',
+          borderRadius: '11px',
+          border: 'none',
+          cursor: 'pointer',
+          background: value ? AMBER : 'rgba(8,10,14,0.7)',
+          outline: `1px solid ${value ? AMBER : BORDER}`,
+          position: 'relative',
+          transition: 'background 0.2s',
+          flexShrink: 0,
+        }}
+        aria-pressed={value}
+      >
+        <span style={{
+          position: 'absolute',
+          top: '3px',
+          left: value ? '20px' : '3px',
+          width: '16px',
+          height: '16px',
+          borderRadius: '50%',
+          background: value ? '#0a0b0e' : DIM,
+          transition: 'left 0.2s',
+        }} />
+      </button>
+      <span style={{ fontSize: '0.9rem', color: value ? TEXT : DIM }}>{label}</span>
+    </div>
+  );
+}
+
+// ── Live pay display ─────────────────────────────────────────────────────────
+
+function PayDisplay({ total }) {
+  return (
+    <div style={{
+      background: 'rgba(232, 168, 56, 0.07)',
+      border: `1px solid ${BORDER}`,
+      borderRadius: '8px',
+      padding: '0.9rem 1.2rem',
+      display: 'flex',
+      alignItems: 'baseline',
+      gap: '0.5rem',
+      marginBottom: '1.25rem',
+    }}>
+      <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: DIM, fontFamily: "'JetBrains Mono', monospace" }}>
+        Est. pay
+      </span>
+      <span style={{ fontSize: '1.6rem', fontWeight: 700, color: AMBER, letterSpacing: '-0.02em' }}>
+        ${total.toFixed(2)}
+      </span>
+    </div>
+  );
+}
+
+// ── Job form (shared between Add and Edit) ───────────────────────────────────
+
+function JobForm({ defaults, action, pending, state, onSuccess }) {
+  const today = new Date().toLocaleDateString('en-CA');
+
+  const [date, setDate]       = useState(defaults?.date || today);
+  const [jobType, setJobType] = useState(defaults?.job_type || 'normal');
+  const [pages, setPages]     = useState(String(defaults?.pages ?? 0));
+  const [proof, setProof]     = useState(defaults?.proofreading ?? false);
+  const [advanced, setAdvanced] = useState(false);
+
+  const [perPageRate,  setPerPageRate]  = useState(String(defaults?.per_page_rate  ?? 3.40));
+  const [proofRate,    setProofRate]    = useState(String(defaults?.proofreading_rate ?? 0.50));
+  const [perDiem,      setPerDiem]      = useState(String(defaults?.per_diem       ?? 25));
+  const [perDiemMult,  setPerDiemMult]  = useState(String(defaults?.per_diem_multiplier ?? 1));
+  const [bustRate,     setBustRate]     = useState(String(defaults?.bust_rate      ?? 85));
+
+  const isNew = !defaults?.id;
+
+  useEffect(() => {
+    if (state?.success) {
+      if (isNew) {
+        setDate(today);
+        setJobType('normal');
+        setPages('0');
+        setProof(false);
+        setPerPageRate('3.40');
+        setProofRate('0.50');
+        setPerDiem('25');
+        setPerDiemMult('1');
+        setBustRate('85');
+        setAdvanced(false);
+      }
+      if (onSuccess) onSuccess();
+    }
+  }, [state]);
+
+  const liveTotal = calcPay({
+    job_type: jobType,
+    pages: Number(pages) || 0,
+    per_page_rate: Number(perPageRate) || 3.40,
+    proofreading: proof,
+    proofreading_rate: Number(proofRate) || 0.50,
+    per_diem: Number(perDiem) || 25,
+    per_diem_multiplier: Number(perDiemMult) || 1,
+    bust_rate: Number(bustRate) || 85,
+  });
+
+  return (
+    <form action={action}>
+      {/* Hidden fields for all values */}
+      <input type="hidden" name="job_type" value={jobType} />
+      <input type="hidden" name="proofreading" value={String(proof)} />
+      <input type="hidden" name="per_page_rate" value={perPageRate} />
+      <input type="hidden" name="proofreading_rate" value={proofRate} />
+      <input type="hidden" name="per_diem" value={perDiem} />
+      <input type="hidden" name="per_diem_multiplier" value={perDiemMult} />
+      <input type="hidden" name="bust_rate" value={bustRate} />
+
+      {/* Date */}
+      <FInput
+        label="Date"
+        name="date"
+        type="date"
+        value={date}
+        onChange={e => setDate(e.target.value)}
+        required
+      />
+
+      {/* Job type toggle */}
+      <div style={{ marginBottom: '1rem' }}>
+        <div style={labelStyle()}>Job type</div>
+        <SegmentToggle
+          value={jobType}
+          onChange={setJobType}
+          options={[
+            { label: 'Went', val: 'normal' },
+            { label: 'Bust', val: 'bust' },
+          ]}
+        />
+      </div>
+
+      {/* Normal-only fields */}
+      {jobType === 'normal' && (
+        <>
+          <FInput
+            label="Pages"
+            name="pages"
+            type="number"
+            min="0"
+            value={pages}
+            onChange={e => setPages(e.target.value)}
+          />
+          <BoolToggle
+            value={proof}
+            onChange={setProof}
+            label="Proofreading"
+          />
+        </>
+      )}
+
+      {/* Live pay estimate */}
+      <PayDisplay total={liveTotal} />
+
+      {/* Advanced section */}
+      <div style={{ marginBottom: '1.25rem' }}>
+        <button
+          type="button"
+          onClick={() => setAdvanced(v => !v)}
+          style={{
+            background: 'none',
+            border: `1px solid ${BORDER}`,
+            borderRadius: '6px',
+            color: DIM,
+            fontSize: '0.78rem',
+            fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: '0.08em',
+            padding: '0.35rem 0.75rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+          }}
+        >
+          <span style={{ display: 'inline-block', transform: advanced ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>▶</span>
+          Advanced rates
+        </button>
+
+        {advanced && (
+          <div style={{
+            marginTop: '0.75rem',
+            padding: '1rem',
+            background: 'rgba(8,10,14,0.5)',
+            border: `1px solid ${BORDER}`,
+            borderRadius: '8px',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '0 1rem',
+          }}>
+            <div>
+              <div style={labelStyle()}>Per-page rate ($)</div>
+              <InputRaw value={perPageRate} onChange={setPerPageRate} type="number" step="0.01" min="0" />
+            </div>
+            <div>
+              <div style={labelStyle()}>Proofreading deduct ($)</div>
+              <InputRaw value={proofRate} onChange={setProofRate} type="number" step="0.01" min="0" />
+            </div>
+            <div>
+              <div style={labelStyle()}>Per diem ($)</div>
+              <InputRaw value={perDiem} onChange={setPerDiem} type="number" step="0.01" min="0" />
+            </div>
+            <div>
+              <div style={labelStyle()}>Per diem ×</div>
+              <SegmentToggle
+                value={perDiemMult}
+                onChange={setPerDiemMult}
+                options={[
+                  { label: '1×', val: '1' },
+                  { label: '2×', val: '2' },
+                ]}
+              />
+            </div>
+            <div style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}>
+              <div style={labelStyle()}>Bust rate ($)</div>
+              <InputRaw value={bustRate} onChange={setBustRate} type="number" step="0.01" min="0" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {state?.error && (
+        <p style={{ color: RED, fontSize: '0.85rem', marginBottom: '0.75rem' }}>{state.error}</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={pending}
+        style={{
+          width: '100%',
+          padding: '0.7rem',
+          background: AMBER,
+          color: '#0a0b0e',
+          border: 'none',
+          borderRadius: '7px',
+          fontWeight: 700,
+          fontSize: '0.9rem',
+          cursor: pending ? 'not-allowed' : 'pointer',
+          opacity: pending ? 0.7 : 1,
+          fontFamily: 'inherit',
+          letterSpacing: '0.02em',
+        }}
+      >
+        {pending ? 'Saving…' : isNew ? 'Log Job →' : 'Save Changes →'}
+      </button>
+    </form>
+  );
+}
+
+function InputRaw({ value, onChange, ...props }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      {...props}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      style={{ ...inputStyle(focused), marginBottom: '0.5rem' }}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+    />
+  );
+}
+
+// ── Add-job form wrapper ─────────────────────────────────────────────────────
+
+function AddJobForm() {
+  const [state, formAction, pending] = useActionState(addJob, {});
+  return (
+    <div style={{
+      background: CARD,
+      border: `1px solid ${BORDER}`,
+      borderRadius: '10px',
+      padding: '1.5rem',
+      marginBottom: '2.5rem',
+      boxShadow: '0 0 20px rgba(232, 168, 56, 0.04)',
+    }}>
+      <div style={{
+        fontSize: '0.7rem',
+        textTransform: 'uppercase',
+        letterSpacing: '0.18em',
+        color: AMBER,
+        fontFamily: "'JetBrains Mono', monospace",
+        marginBottom: '1.25rem',
+      }}>
+        // Log a job
+      </div>
+      <JobForm action={formAction} pending={pending} state={state} />
+    </div>
+  );
+}
+
+// ── Job row (list item + inline edit) ───────────────────────────────────────
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-');
+  return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
+}
+
+function JobRow({ job }) {
+  const [editing, setEditing] = useState(false);
+  const [deletePending, startDelete] = useTransition();
+  const boundUpdate = updateJob.bind(null, job.id);
+  const [editState, editAction, editPending] = useActionState(boundUpdate, {});
+
+  const total = calcPay(job);
+
+  function handleDelete() {
+    if (!confirm('Delete this job? This cannot be undone.')) return;
+    startDelete(() => deleteJob(job.id));
+  }
+
+  const rowStyle = {
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: '8px',
+    padding: '0.9rem 1.1rem',
+    marginBottom: '0.6rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap',
+  };
+
+  const chipStyle = (color = DIM) => ({
+    display: 'inline-block',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '4px',
+    fontSize: '0.72rem',
+    fontFamily: "'JetBrains Mono', monospace",
+    letterSpacing: '0.05em',
+    background: color === AMBER ? 'rgba(232,168,56,0.12)' : 'rgba(232, 88, 88, 0.1)',
+    color: color,
+    border: `1px solid ${color === AMBER ? 'rgba(232,168,56,0.25)' : 'rgba(232,88,88,0.25)'}`,
+  });
+
+  return (
+    <>
+      <div style={rowStyle}>
+        <span style={{ color: TEXT, fontSize: '0.9rem', minWidth: '110px' }}>
+          {formatDate(job.date)}
+        </span>
+
+        <span style={chipStyle(job.job_type === 'bust' ? RED : AMBER)}>
+          {job.job_type === 'bust' ? 'Bust' : 'Went'}
+        </span>
+
+        {job.job_type === 'normal' && (
+          <span style={{ color: DIM, fontSize: '0.85rem' }}>
+            {job.pages} pg{job.pages !== 1 ? 's' : ''}
+            {job.proofreading && <span style={{ color: '#6a9fd8', marginLeft: '0.4rem', fontSize: '0.75rem' }}>+ proof</span>}
+          </span>
+        )}
+
+        <span style={{ marginLeft: 'auto', fontWeight: 700, color: AMBER, fontSize: '1rem', letterSpacing: '-0.01em' }}>
+          ${total.toFixed(2)}
+        </span>
+
+        <button
+          type="button"
+          onClick={() => setEditing(v => !v)}
+          style={{
+            background: 'none',
+            border: `1px solid ${BORDER}`,
+            borderRadius: '5px',
+            color: DIM,
+            fontSize: '0.78rem',
+            padding: '0.25rem 0.65rem',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {editing ? 'Cancel' : 'Edit'}
+        </button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deletePending}
+          style={{
+            background: 'none',
+            border: `1px solid rgba(232,88,88,0.25)`,
+            borderRadius: '5px',
+            color: RED,
+            fontSize: '0.78rem',
+            padding: '0.25rem 0.65rem',
+            cursor: deletePending ? 'not-allowed' : 'pointer',
+            opacity: deletePending ? 0.6 : 1,
+            fontFamily: 'inherit',
+          }}
+        >
+          {deletePending ? '…' : 'Delete'}
+        </button>
+      </div>
+
+      {editing && (
+        <div style={{
+          background: 'rgba(19,22,29,0.97)',
+          border: `1px solid ${BORDER}`,
+          borderRadius: '8px',
+          padding: '1.25rem',
+          marginTop: '-0.4rem',
+          marginBottom: '0.6rem',
+        }}>
+          <div style={{ fontSize: '0.7rem', color: DIM, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.1em', marginBottom: '1rem' }}>
+            // Editing {formatDate(job.date)}
+          </div>
+          <JobForm
+            defaults={job}
+            action={editAction}
+            pending={editPending}
+            state={editState}
+            onSuccess={() => setEditing(false)}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── Main export ──────────────────────────────────────────────────────────────
+
+export default function TranscriptionClient({ jobs }) {
+  return (
+    <div style={{ maxWidth: '680px' }}>
+
+      <AddJobForm />
+
+      <div style={{
+        fontSize: '0.7rem',
+        textTransform: 'uppercase',
+        letterSpacing: '0.18em',
+        color: DIM,
+        fontFamily: "'JetBrains Mono', monospace",
+        marginBottom: '1rem',
+      }}>
+        // {jobs.length} job{jobs.length !== 1 ? 's' : ''} logged
+      </div>
+
+      {jobs.length === 0 ? (
+        <div style={{
+          padding: '2rem',
+          textAlign: 'center',
+          color: DIM,
+          background: CARD,
+          border: `1px solid ${BORDER}`,
+          borderRadius: '8px',
+          fontSize: '0.9rem',
+        }}>
+          No jobs logged yet. Use the form above to add the first one.
+        </div>
+      ) : (
+        <div>
+          {jobs.map(job => (
+            <JobRow key={job.id} job={job} />
+          ))}
+        </div>
+      )}
+
+    </div>
+  );
+}

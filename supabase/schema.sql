@@ -66,3 +66,19 @@ CREATE TABLE IF NOT EXISTS one_on_ones (
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
+
+-- transcription_jobs (court reporting work tracker)
+CREATE TABLE IF NOT EXISTS transcription_jobs (
+  id                  uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  date                date        NOT NULL,
+  job_type            text        NOT NULL DEFAULT 'normal',
+  pages               integer     DEFAULT 0,
+  per_page_rate       numeric     DEFAULT 3.40,
+  proofreading        boolean     DEFAULT false,
+  proofreading_rate   numeric     DEFAULT 0.50,
+  per_diem            numeric     DEFAULT 25,
+  per_diem_multiplier integer     DEFAULT 1,
+  bust_rate           numeric     DEFAULT 85,
+  created_at          timestamptz DEFAULT now(),
+  updated_at          timestamptz DEFAULT now()
+);
