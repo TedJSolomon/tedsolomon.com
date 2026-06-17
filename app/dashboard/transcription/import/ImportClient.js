@@ -133,7 +133,7 @@ function parseCSV(text) {
 
     const job_type         = get(f, 'didTheJobGo').toLowerCase() === 'yes' ? 'normal' : 'bust';
     const pagesRaw         = get(f, 'pages');
-    const pages            = job_type === 'bust' ? 0 : (parseInt(pagesRaw.replace(/[^0-9]/g, ''), 10) || 0);
+    const pages            = job_type === 'bust' ? 0 : Math.round(parseMoney(pagesRaw));
     const csv_total        = parseMoney(get(f, 'takeHomeTotal'));
     const bust_rate        = job_type === 'bust' ? csv_total : 85;
     const proofreading_rate = parseMoney(get(f, 'magsRate'));
