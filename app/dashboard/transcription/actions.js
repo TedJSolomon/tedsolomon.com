@@ -50,3 +50,12 @@ export async function deleteJob(id) {
   if (error) console.error('deleteJob:', error.message);
   revalidatePath('/dashboard/transcription');
 }
+
+export async function importJobs(jobs) {
+  if (!Array.isArray(jobs) || jobs.length === 0) return { error: 'No jobs to import.' };
+  const supabase = createServerClient();
+  const { error } = await supabase.from('transcription_jobs').insert(jobs);
+  if (error) return { error: error.message };
+  revalidatePath('/dashboard/transcription');
+  return { success: true, count: jobs.length };
+}
