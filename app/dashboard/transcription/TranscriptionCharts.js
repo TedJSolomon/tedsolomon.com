@@ -36,13 +36,14 @@ const WEEKDAY_JS_IDX  = [1,2,3,4,5,6,0]; // JS getDay() → Mon=1..Sat=6,Sun=0
 
 function calcNet(j) {
   if (j.job_type === 'bust') return Number(j.bust_rate);
-  const rate = Number(j.per_page_rate) - (j.proofreading ? Number(j.proofreading_rate) : 0);
+  const rate = Number(j.per_page_rate) - (j.proofreading ? Number(j.proofreading_rate) : 0) + (j.rush ? Number(j.rush_rate) : 0);
   return Number(j.pages) * rate + Number(j.per_diem) * Number(j.per_diem_multiplier);
 }
 
 function calcGross(j) {
   if (j.job_type === 'bust') return Number(j.bust_rate);
-  return Number(j.pages) * Number(j.per_page_rate) + Number(j.per_diem) * Number(j.per_diem_multiplier);
+  const rate = Number(j.per_page_rate) + (j.rush ? Number(j.rush_rate) : 0);
+  return Number(j.pages) * rate + Number(j.per_diem) * Number(j.per_diem_multiplier);
 }
 
 function yearOf(d)  { return d ? parseInt(d.slice(0, 4), 10) : null; }

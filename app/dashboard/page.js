@@ -228,13 +228,13 @@ async function getTranscriptionStats() {
     const year = new Date().getFullYear();
     const { data } = await supabase
       .from('transcription_jobs')
-      .select('date, job_type, pages, per_page_rate, proofreading, proofreading_rate, per_diem, per_diem_multiplier, bust_rate')
+      .select('date, job_type, pages, per_page_rate, proofreading, proofreading_rate, rush, rush_rate, per_diem, per_diem_multiplier, bust_rate')
       .gte('date', `${year}-01-01`)
       .lte('date', `${year}-12-31`);
     if (!data?.length) return null;
     function pay(j) {
       if (j.job_type === 'bust') return Number(j.bust_rate);
-      const rate = Number(j.per_page_rate) - (j.proofreading ? Number(j.proofreading_rate) : 0);
+      const rate = Number(j.per_page_rate) - (j.proofreading ? Number(j.proofreading_rate) : 0) + (j.rush ? Number(j.rush_rate) : 0);
       return Number(j.pages) * rate + Number(j.per_diem) * Number(j.per_diem_multiplier);
     }
     const ytd = data.reduce((s, j) => s + pay(j), 0);

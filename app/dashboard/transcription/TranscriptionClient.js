@@ -15,9 +15,9 @@ const RED    = '#e85858';
 
 // ── Pay calculation (mirrors server lib) ────────────────────────────────────
 
-function calcPay({ job_type, pages, per_page_rate, proofreading, proofreading_rate, per_diem, per_diem_multiplier, bust_rate }) {
+function calcPay({ job_type, pages, per_page_rate, proofreading, proofreading_rate, rush, rush_rate, per_diem, per_diem_multiplier, bust_rate }) {
   if (job_type === 'bust') return Number(bust_rate);
-  const rate = Number(per_page_rate) - (proofreading ? Number(proofreading_rate) : 0);
+  const rate = Number(per_page_rate) - (proofreading ? Number(proofreading_rate) : 0) + (rush ? Number(rush_rate) : 0);
   return Number(pages) * rate + Number(per_diem) * Number(per_diem_multiplier);
 }
 
@@ -179,10 +179,12 @@ function JobForm({ defaults, action, pending, state, onSuccess }) {
   const [jobType, setJobType] = useState(defaults?.job_type || 'normal');
   const [pages, setPages]     = useState(String(defaults?.pages ?? 0));
   const [proof, setProof]     = useState(defaults?.proofreading ?? false);
+  const [rush, setRush]       = useState(defaults?.rush ?? false);
   const [advanced, setAdvanced] = useState(false);
 
   const [perPageRate,  setPerPageRate]  = useState(String(defaults?.per_page_rate  ?? 3.40));
   const [proofRate,    setProofRate]    = useState(String(defaults?.proofreading_rate ?? 0.50));
+  const [rushRate,     setRushRate]     = useState(String(defaults?.rush_rate ?? 0.60));
   const [perDiem,      setPerDiem]      = useState(String(defaults?.per_diem       ?? 25));
   const [perDiemMult,  setPerDiemMult]  = useState(String(defaults?.per_diem_multiplier ?? 1));
   const [bustRate,     setBustRate]     = useState(String(defaults?.bust_rate      ?? 85));
@@ -196,8 +198,10 @@ function JobForm({ defaults, action, pending, state, onSuccess }) {
         setJobType('normal');
         setPages('0');
         setProof(false);
+        setRush(false);
         setPerPageRate('3.40');
         setProofRate('0.50');
+        setRushRate('0.60');
         setPerDiem('25');
         setPerDiemMult('1');
         setBustRate('85');
@@ -213,6 +217,8 @@ function JobForm({ defaults, action, pending, state, onSuccess }) {
     per_page_rate: Number(perPageRate) || 3.40,
     proofreading: proof,
     proofreading_rate: Number(proofRate) || 0.50,
+    rush,
+    rush_rate: Number(rushRate) || 0.60,
     per_diem: Number(perDiem) || 25,
     per_diem_multiplier: Number(perDiemMult) || 1,
     bust_rate: Number(bustRate) || 85,
@@ -225,6 +231,8 @@ function JobForm({ defaults, action, pending, state, onSuccess }) {
       <input type="hidden" name="proofreading" value={String(proof)} />
       <input type="hidden" name="per_page_rate" value={perPageRate} />
       <input type="hidden" name="proofreading_rate" value={proofRate} />
+      <input type="hidden" name="rush" value={String(rush)} />
+      <input type="hidden" name="rush_rate" value={rushRate} />
       <input type="hidden" name="per_diem" value={perDiem} />
       <input type="hidden" name="per_diem_multiplier" value={perDiemMult} />
       <input type="hidden" name="bust_rate" value={bustRate} />
@@ -267,6 +275,11 @@ function JobForm({ defaults, action, pending, state, onSuccess }) {
             value={proof}
             onChange={setProof}
             label="Proofreading"
+          />
+          <BoolToggle
+            value={rush}
+            onChange={setRush}
+            label="Rush"
           />
         </>
       )}
@@ -332,7 +345,11 @@ function JobForm({ defaults, action, pending, state, onSuccess }) {
                 ]}
               />
             </div>
-            <div style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}>
+            <div style={{ marginTop: '0.5rem' }}>
+              <div style={labelStyle()}>Rush upcharge ($)</div>
+              <InputRaw value={rushRate} onChange={setRushRate} type="number" step="0.01" min="0" />
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
               <div style={labelStyle()}>Bust rate ($)</div>
               <InputRaw value={bustRate} onChange={setBustRate} type="number" step="0.01" min="0" />
             </div>
@@ -501,6 +518,7 @@ function JobRow({ job }) {
           <span style={{ color: DIM, fontSize: '0.85rem' }}>
             {job.pages} pg{job.pages !== 1 ? 's' : ''}
             {job.proofreading && <span style={{ color: '#6a9fd8', marginLeft: '0.4rem', fontSize: '0.75rem' }}>+ proof</span>}
+            {job.rush && <span style={{ color: AMBER, marginLeft: '0.4rem', fontSize: '0.75rem' }}>+ rush</span>}
           </span>
         )}
 

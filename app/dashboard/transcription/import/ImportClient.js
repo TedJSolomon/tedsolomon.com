@@ -58,7 +58,7 @@ function parseDate(str) {
 
 function calcPay(row) {
   if (row.job_type === 'bust') return Number(row.bust_rate);
-  const rate = Number(row.per_page_rate) - (row.proofreading ? Number(row.proofreading_rate) : 0);
+  const rate = Number(row.per_page_rate) - (row.proofreading ? Number(row.proofreading_rate) : 0) + (row.rush ? Number(row.rush_rate) : 0);
   return Number(row.pages) * rate + Number(row.per_diem) * Number(row.per_diem_multiplier);
 }
 

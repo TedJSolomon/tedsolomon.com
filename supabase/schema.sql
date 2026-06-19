@@ -76,9 +76,15 @@ CREATE TABLE IF NOT EXISTS transcription_jobs (
   per_page_rate       numeric     DEFAULT 3.40,
   proofreading        boolean     DEFAULT false,
   proofreading_rate   numeric     DEFAULT 0.50,
+  rush                boolean     DEFAULT false,
+  rush_rate           numeric     DEFAULT 0.60,
   per_diem            numeric     DEFAULT 25,
   per_diem_multiplier integer     DEFAULT 1,
   bust_rate           numeric     DEFAULT 85,
   created_at          timestamptz DEFAULT now(),
   updated_at          timestamptz DEFAULT now()
 );
+
+-- migration: rush upcharge (2026-06-19) — table already existed, so backfill columns
+ALTER TABLE transcription_jobs ADD COLUMN IF NOT EXISTS rush      boolean DEFAULT false;
+ALTER TABLE transcription_jobs ADD COLUMN IF NOT EXISTS rush_rate numeric DEFAULT 0.60;

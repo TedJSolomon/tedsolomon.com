@@ -11,6 +11,8 @@ function parseJob(formData) {
     per_page_rate:       parseFloat(formData.get('per_page_rate')?.toString() || '3.40'),
     proofreading:        formData.get('proofreading') === 'true',
     proofreading_rate:   parseFloat(formData.get('proofreading_rate')?.toString() || '0.50'),
+    rush:                formData.get('rush') === 'true',
+    rush_rate:           parseFloat(formData.get('rush_rate')?.toString() || '0.60'),
     per_diem:            parseFloat(formData.get('per_diem')?.toString() || '25'),
     per_diem_multiplier: parseInt(formData.get('per_diem_multiplier')?.toString() || '1', 10),
     bust_rate:           parseFloat(formData.get('bust_rate')?.toString() || '85'),

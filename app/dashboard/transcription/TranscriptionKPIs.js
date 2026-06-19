@@ -11,9 +11,9 @@ const CARD   = 'rgba(19, 22, 29, 0.85)';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function calcPay({ job_type, pages, per_page_rate, proofreading, proofreading_rate, per_diem, per_diem_multiplier, bust_rate }) {
+function calcPay({ job_type, pages, per_page_rate, proofreading, proofreading_rate, rush, rush_rate, per_diem, per_diem_multiplier, bust_rate }) {
   if (job_type === 'bust') return Number(bust_rate);
-  const rate = Number(per_page_rate) - (proofreading ? Number(proofreading_rate) : 0);
+  const rate = Number(per_page_rate) - (proofreading ? Number(proofreading_rate) : 0) + (rush ? Number(rush_rate) : 0);
   return Number(pages) * rate + Number(per_diem) * Number(per_diem_multiplier);
 }
 

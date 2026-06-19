@@ -6,8 +6,9 @@ export function calcPay(job) {
   }
   const pageRate = Number(job.per_page_rate);
   const proofDeduct = job.proofreading ? Number(job.proofreading_rate) : 0;
+  const rushUpcharge = job.rush ? Number(job.rush_rate) : 0;
   const perDiem = Number(job.per_diem) * Number(job.per_diem_multiplier);
-  return Number(job.pages) * (pageRate - proofDeduct) + perDiem;
+  return Number(job.pages) * (pageRate - proofDeduct + rushUpcharge) + perDiem;
 }
 
 export async function getAllJobs() {
