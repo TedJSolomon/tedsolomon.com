@@ -25,6 +25,16 @@ function isLeap(y) {
   return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
 }
 
+// Simple week-of-year (1–53), based on day-of-year — consistent within a
+// single calendar year, which is all we ever dedupe across here.
+function weekOfYear(dateStr) {
+  const [y, m, d]    = dateStr.split('-').map(Number);
+  const date         = new Date(y, m - 1, d);
+  const startOfYear  = new Date(y, 0, 1);
+  const dayOfYear    = Math.floor((date - startOfYear) / 86_400_000) + 1;
+  return Math.ceil(dayOfYear / 7);
+}
+
 function computeKPIs(jobs, year) {
   const today       = new Date();
   const currentYear = today.getFullYear();
@@ -43,24 +53,30 @@ function computeKPIs(jobs, year) {
 
   const daysInYear = isLeap(year) ? 366 : 365;
 
-  let daysElapsed, weeksElapsed, monthsElapsed;
+  let daysElapsed, weeksElapsedPace, monthsElapsedPace;
   if (isCurrent) {
     const startOfYear = new Date(year, 0, 1);
-    daysElapsed   = Math.max(1, Math.floor((today - startOfYear) / 86_400_000) + 1);
-    weeksElapsed  = daysElapsed / 7;
-    monthsElapsed = daysElapsed * 12 / daysInYear;
+    daysElapsed       = Math.max(1, Math.floor((today - startOfYear) / 86_400_000) + 1);
+    weeksElapsedPace  = daysElapsed / 7;
+    monthsElapsedPace = today.getMonth() + 1; // Jan = 1 ... current month
   } else {
-    daysElapsed   = daysInYear;
-    weeksElapsed  = 52;
-    monthsElapsed = 12;
+    daysElapsed       = daysInYear;
+    weeksElapsedPace  = 52;
+    monthsElapsedPace = 12;
   }
+
+  // Active = only months/weeks that actually contain a job — excludes idle stretches.
+  const activeMonths = new Set(yearJobs.map(j => j.date.slice(5, 7))).size;
+  const activeWeeks  = new Set(yearJobs.map(j => weekOfYear(j.date))).size;
 
   return {
     avgPages,
-    perWeek:    totalPay / weeksElapsed,
-    perMonth:   totalPay / monthsElapsed,
-    bustRate:   (bustCount / yearJobs.length) * 100,
-    projected:  isCurrent ? (totalPay / daysElapsed) * daysInYear : totalPay,
+    perActiveWeek:  totalPay / activeWeeks,
+    perActiveMonth: totalPay / activeMonths,
+    perWeekYTD:     totalPay / weeksElapsedPace,
+    perMonthYTD:    totalPay / monthsElapsedPace,
+    bustRate:       (bustCount / yearJobs.length) * 100,
+    projected:      isCurrent ? (totalPay / daysElapsed) * daysInYear : totalPay,
     isCurrent,
   };
 }
@@ -99,6 +115,31 @@ function KPICard({ value, label }) {
         color: DIM,
       }}>
         {label}
+      </div>
+    </div>
+  );
+}
+
+function KPIGroup({ title, children }) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.4rem',
+      flex: '2 1 300px',
+    }}>
+      <div style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: '0.6rem',
+        textTransform: 'uppercase',
+        letterSpacing: '0.14em',
+        color: DIM,
+        paddingLeft: '0.1rem',
+      }}>
+        {title}
+      </div>
+      <div style={{ display: 'flex', gap: '0.65rem' }}>
+        {children}
       </div>
     </div>
   );
@@ -154,19 +195,34 @@ export default function TranscriptionKPIs({ jobs }) {
 
       {/* Cards */}
       {kpis ? (
-        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '1.1rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
           <KPICard
             value={kpis.avgPages > 0 ? kpis.avgPages.toFixed(1) : '—'}
             label="Avg Pages / Job"
           />
-          <KPICard
-            value={`$${Math.round(kpis.perWeek).toLocaleString()}`}
-            label="$ / Week"
-          />
-          <KPICard
-            value={`$${Math.round(kpis.perMonth).toLocaleString()}`}
-            label="$ / Month"
-          />
+
+          <KPIGroup title="// Active (worked periods only)">
+            <KPICard
+              value={`$${Math.round(kpis.perActiveWeek).toLocaleString()}`}
+              label="$ / Active Week"
+            />
+            <KPICard
+              value={`$${Math.round(kpis.perActiveMonth).toLocaleString()}`}
+              label="$ / Active Month"
+            />
+          </KPIGroup>
+
+          <KPIGroup title="// YTD pace (elapsed time)">
+            <KPICard
+              value={`$${Math.round(kpis.perWeekYTD).toLocaleString()}`}
+              label="$ / Week (YTD)"
+            />
+            <KPICard
+              value={`$${Math.round(kpis.perMonthYTD).toLocaleString()}`}
+              label="$ / Month (YTD)"
+            />
+          </KPIGroup>
+
           <KPICard
             value={`${kpis.bustRate.toFixed(1)}%`}
             label="Bust Rate"
