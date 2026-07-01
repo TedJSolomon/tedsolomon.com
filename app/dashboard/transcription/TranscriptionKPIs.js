@@ -86,7 +86,10 @@ function computeKPIs(jobs, year) {
 function KPICard({ value, label }) {
   return (
     <div style={{
-      flex: '1 1 140px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      height: '100%',
       background: CARD,
       border: `1px solid ${BORDER}`,
       borderRadius: '8px',
@@ -115,31 +118,6 @@ function KPICard({ value, label }) {
         color: DIM,
       }}>
         {label}
-      </div>
-    </div>
-  );
-}
-
-function KPIGroup({ title, children }) {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.4rem',
-      flex: '2 1 300px',
-    }}>
-      <div style={{
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: '0.6rem',
-        textTransform: 'uppercase',
-        letterSpacing: '0.14em',
-        color: DIM,
-        paddingLeft: '0.1rem',
-      }}>
-        {title}
-      </div>
-      <div style={{ display: 'flex', gap: '0.65rem' }}>
-        {children}
       </div>
     </div>
   );
@@ -195,34 +173,31 @@ export default function TranscriptionKPIs({ jobs }) {
 
       {/* Cards */}
       {kpis ? (
-        <div style={{ display: 'flex', gap: '1.1rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '1.1rem',
+        }}>
           <KPICard
             value={kpis.avgPages > 0 ? kpis.avgPages.toFixed(1) : '—'}
             label="Avg Pages / Job"
           />
-
-          <KPIGroup title="// Active (worked periods only)">
-            <KPICard
-              value={`$${Math.round(kpis.perActiveWeek).toLocaleString()}`}
-              label="$ / Active Week"
-            />
-            <KPICard
-              value={`$${Math.round(kpis.perActiveMonth).toLocaleString()}`}
-              label="$ / Active Month"
-            />
-          </KPIGroup>
-
-          <KPIGroup title="// YTD pace (elapsed time)">
-            <KPICard
-              value={`$${Math.round(kpis.perWeekYTD).toLocaleString()}`}
-              label="$ / Week (YTD)"
-            />
-            <KPICard
-              value={`$${Math.round(kpis.perMonthYTD).toLocaleString()}`}
-              label="$ / Month (YTD)"
-            />
-          </KPIGroup>
-
+          <KPICard
+            value={`$${Math.round(kpis.perActiveWeek).toLocaleString()}`}
+            label="$ / Active Week"
+          />
+          <KPICard
+            value={`$${Math.round(kpis.perActiveMonth).toLocaleString()}`}
+            label="$ / Active Month"
+          />
+          <KPICard
+            value={`$${Math.round(kpis.perWeekYTD).toLocaleString()}`}
+            label="$ / Week (YTD)"
+          />
+          <KPICard
+            value={`$${Math.round(kpis.perMonthYTD).toLocaleString()}`}
+            label="$ / Month (YTD)"
+          />
           <KPICard
             value={`${kpis.bustRate.toFixed(1)}%`}
             label="Bust Rate"
