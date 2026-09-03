@@ -39,7 +39,7 @@ export default function Projects() {
             <span className="tag">Growth</span>
             <span className="tag">Newsletter</span>
           </div>
-          <a href="#" className="btn-secondary">Visit Vision Quest →</a>
+          <a href="https://www.visionquest.news" target="_blank" rel="noopener noreferrer" className="btn-secondary">Visit Vision Quest →</a>
         </div>
       </section>
 
