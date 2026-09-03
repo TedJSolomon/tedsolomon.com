@@ -1,9 +1,10 @@
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
+import LongIslandEmpireSection from '../components/LongIslandEmpireSection';
 
 export const metadata = {
   title: 'Projects — Ted Solomon',
-  description: 'Projects by Ted Solomon — Vision Quest newsletter, Catalyft mobile app, and Meeting Cost Calculator.',
+  description: 'Projects by Ted Solomon — Vision Quest newsletter, Catalyft mobile app, Meeting Cost Calculator, and Long Island Empire Baseball.',
 };
 
 export default function Projects() {
@@ -83,6 +84,8 @@ export default function Projects() {
           <a href="/tools/meeting-cost-calculator" className="btn-secondary">Open Calculator →</a>
         </div>
       </section>
+
+      <LongIslandEmpireSection />
 
       <Footer />
     </>

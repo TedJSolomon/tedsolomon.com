@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
+import LongIslandEmpireCard from './components/LongIslandEmpireCard';
 
 export const metadata = {
   title: 'Ted Solomon — Product Manager, Builder',
@@ -194,6 +195,7 @@ export default function Home() {
               <span className="tag">Fitness</span>
             </div>
           </Link>
+          <LongIslandEmpireCard />
         </div>
       </section>
 
