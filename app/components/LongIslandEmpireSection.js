@@ -1,37 +1,46 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const tags = ['React', 'Vite', 'Web Design', 'Client Work'];
 
-export default function LongIslandEmpireSection() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [btnHovered, setBtnHovered] = useState(false);
+// Responsive values below were previously driven by a client-only
+// matchMedia check (isMobile state starting false, corrected post-mount),
+// which caused a visible reflow on real mobile devices right after
+// hydration. A plain CSS media query renders the correct layout on the
+// server, matching every other responsive breakpoint in this codebase.
+const STYLE_TAG = `
+.lie-section {
+  padding: 5rem 3rem;
+  grid-template-columns: 200px 1fr;
+  gap: 4rem;
+}
+@media (max-width: 768px) {
+  .lie-section {
+    padding: 3rem 1.5rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+`;
 
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mq.matches);
-    const handler = (e) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+export default function LongIslandEmpireSection() {
+  const [btnHovered, setBtnHovered] = useState(false);
 
   return (
     <section
+      className="lie-section"
       style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: isMobile ? '3rem 1.5rem' : '5rem 3rem',
         display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '200px 1fr',
-        gap: isMobile ? '1.5rem' : '4rem',
         alignItems: 'start',
         borderTop: '1px solid var(--border)',
       }}
     >
       <div
         style={{
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: 'var(--font-jetbrains-mono), monospace',
           fontSize: '0.7rem',
           textTransform: 'uppercase',
           letterSpacing: '0.2em',
@@ -44,7 +53,7 @@ export default function LongIslandEmpireSection() {
       <div>
         <h2
           style={{
-            fontFamily: "'DM Serif Display', serif",
+            fontFamily: 'var(--font-dm-serif-display), serif',
             fontSize: 'clamp(2rem, 4vw, 2.8rem)',
             color: 'var(--text-bright)',
             letterSpacing: '-0.02em',
@@ -121,7 +130,7 @@ export default function LongIslandEmpireSection() {
             <span
               key={tag}
               style={{
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: 'var(--font-jetbrains-mono), monospace',
                 fontSize: '0.6rem',
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
@@ -141,7 +150,7 @@ export default function LongIslandEmpireSection() {
           onMouseEnter={() => setBtnHovered(true)}
           onMouseLeave={() => setBtnHovered(false)}
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: 'var(--font-jetbrains-mono), monospace',
             fontSize: '0.75rem',
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
@@ -159,6 +168,8 @@ export default function LongIslandEmpireSection() {
           Visit Long Island Empire Baseball →
         </a>
       </div>
+
+      <style>{STYLE_TAG}</style>
     </section>
   );
 }
