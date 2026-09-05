@@ -1,4 +1,3 @@
-import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 
 export const metadata = {
@@ -10,7 +9,6 @@ export const metadata = {
 export default function Blog() {
   return (
     <>
-      <Nav />
 
       <section className="coming-soon">
         <div className="coming-soon-tag">Blog</div>

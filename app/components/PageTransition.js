@@ -22,6 +22,51 @@ const ENTER_EASE = [0.22, 1, 0.36, 1];
 const EXIT_EASE = [0.4, 0, 1, 1];
 const STOP_FALLBACK_MS = 600;
 
+// Extracted so willChange can be local state that resets fresh on every
+// route mount (this component gets key={pathname} at its render site) —
+// PageTransition itself never remounts, only this child does.
+function AnimatedPage({ reduceMotion, onEnterComplete, children }) {
+  // Removed (set to 'auto') once the enter animation completes so it
+  // doesn't linger as a permanent compositing layer.
+  const [willChange, setWillChange] = useState('opacity, transform');
+
+  function handleAnimationComplete(definition) {
+    // Fires for both the enter (animate) and exit targets since it's the
+    // same prop on the same element across both phases. Exit is handled by
+    // onExitComplete at the AnimatePresence level, so only react here when
+    // it's the enter side that just finished.
+    if (definition.opacity !== 1) return;
+
+    setWillChange('auto');
+    onEnterComplete();
+  }
+
+  return (
+    <motion.div
+      onAnimationComplete={handleAnimationComplete}
+      style={{
+        position: 'relative',
+        width: '100%',
+        willChange,
+        backfaceVisibility: 'hidden',
+      }}
+      initial={{ opacity: 0, y: 14 }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        transition: reduceMotion ? { duration: 0 } : { duration: 0.45, ease: ENTER_EASE },
+      }}
+      exit={{
+        opacity: 0,
+        y: -12,
+        transition: reduceMotion ? { duration: 0 } : { duration: 0.28, ease: EXIT_EASE },
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export default function PageTransition({ children }) {
   const pathname = usePathname();
   const lenis = useLenis();
@@ -74,13 +119,7 @@ export default function PageTransition({ children }) {
     }
   }
 
-  function handleAnimationComplete(definition) {
-    // motion.div's onAnimationComplete fires for both the enter (animate)
-    // and exit targets since it's the same prop on the same element across
-    // both phases. Exit is already handled by onExitComplete above, so only
-    // react here when it's the enter side that just finished.
-    if (definition.opacity !== 1) return;
-
+  function handleEnterComplete() {
     clearTimeout(fallbackTimerRef.current);
     lenis?.start();
     lenis?.resize();
@@ -92,24 +131,9 @@ export default function PageTransition({ children }) {
     // hero's own entrance stagger already owns that moment. Subsequent
     // route changes (a new key showing up later) still animate normally.
     <AnimatePresence mode="wait" initial={false} onExitComplete={handleExitComplete}>
-      <motion.div
-        key={pathname}
-        onAnimationComplete={handleAnimationComplete}
-        style={{ position: 'relative', width: '100%' }}
-        initial={{ opacity: 0, y: 14 }}
-        animate={{
-          opacity: 1,
-          y: 0,
-          transition: reduceMotion ? { duration: 0 } : { duration: 0.45, ease: ENTER_EASE },
-        }}
-        exit={{
-          opacity: 0,
-          y: -12,
-          transition: reduceMotion ? { duration: 0 } : { duration: 0.28, ease: EXIT_EASE },
-        }}
-      >
+      <AnimatedPage key={pathname} reduceMotion={reduceMotion} onEnterComplete={handleEnterComplete}>
         {children}
-      </motion.div>
+      </AnimatedPage>
     </AnimatePresence>
   );
 }

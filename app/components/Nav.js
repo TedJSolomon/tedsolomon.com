@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { useLenis } from './SmoothScroll';
 
 const NAV_ITEMS = [
@@ -13,6 +13,19 @@ const NAV_ITEMS = [
   { href: '/blog', label: 'Blog' },
   { href: '/contact', label: 'Contact' },
 ];
+
+const EXCLUDED_PREFIXES = ['/dashboard', '/login'];
+
+function isExcludedRoute(pathname) {
+  return EXCLUDED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
+// Same reasoning as SmoothScroll.js / PageTransition.js: avoids the
+// "useLayoutEffect does nothing on the server" warning by picking the hook
+// per-environment rather than guarding inside the callback.
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -57,6 +70,25 @@ export default function Nav() {
   const [logoHover, setLogoHover] = useState(false);
   const [hoveredLink, setHoveredLink] = useState(null);
 
+  // Exactly one underline element exists in the tree at all times — its
+  // position is measured off whichever link is currently active, rather
+  // than the underline itself being conditionally mounted/unmounted inside
+  // the active link. That conditional-per-link approach is what let the
+  // shared layoutId animation glitch (flash / double-render) during a
+  // route change, since the old and new instances aren't guaranteed to
+  // overlap cleanly for Motion's FLIP measurement.
+  const linkRefs = useRef({});
+  const [underlineRect, setUnderlineRect] = useState({ left: 0, width: 0, opacity: 0 });
+
+  useIsomorphicLayoutEffect(() => {
+    const activeLink = linkRefs.current[pathname];
+    if (activeLink) {
+      setUnderlineRect({ left: activeLink.offsetLeft, width: activeLink.offsetWidth, opacity: 1 });
+    } else {
+      setUnderlineRect((prev) => ({ ...prev, opacity: 0 }));
+    }
+  }, [pathname]);
+
   // Lock body scroll and pause Lenis while the mobile overlay is open.
   useEffect(() => {
     if (menuOpen) {
@@ -86,8 +118,12 @@ export default function Nav() {
     setMenuOpen(false);
   }, [pathname]);
 
+  if (isExcludedRoute(pathname)) {
+    return null;
+  }
+
   return (
-    <>
+    <LayoutGroup>
       <nav
         className="site-nav"
         style={{
@@ -134,7 +170,10 @@ export default function Nav() {
           </span>
         </Link>
 
-        <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '28px' }}>
+        <div
+          className="nav-links-desktop"
+          style={{ alignItems: 'center', gap: '28px', position: 'relative' }}
+        >
           {NAV_ITEMS.map(({ href, label }) => {
             const isActive = pathname === href;
             const isHovered = hoveredLink === href;
@@ -142,6 +181,9 @@ export default function Nav() {
               <Link
                 key={href}
                 href={href}
+                ref={(el) => {
+                  linkRefs.current[href] = el;
+                }}
                 onMouseEnter={() => setHoveredLink(href)}
                 onMouseLeave={() => setHoveredLink(null)}
                 style={{
@@ -157,30 +199,29 @@ export default function Nav() {
                 }}
               >
                 {label}
-                {isActive && (
-                  <motion.div
-                    // Omitting layoutId entirely under reduced motion (rather
-                    // than just zeroing the transition duration) — Motion's
-                    // FLIP-based layout animation doesn't respect
-                    // duration: 0 the way a normal animate transition does,
-                    // so the shared-layout slide still played. With no
-                    // layoutId, each active underline is independent and
-                    // simply appears at its position, no animation possible.
-                    layoutId={reduceMotion ? undefined : 'nav-active-underline'}
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      right: 0,
-                      bottom: '4px',
-                      height: '1px',
-                      background: 'var(--accent)',
-                    }}
-                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                  />
-                )}
               </Link>
             );
           })}
+          <motion.div
+            // Omitting layoutId entirely under reduced motion (rather than
+            // just zeroing the transition duration) — Motion's FLIP-based
+            // layout animation doesn't respect duration: 0 the way a
+            // normal animate transition does, so the shared-layout slide
+            // still played. With no layoutId, the underline just appears
+            // at its position, no animation possible.
+            layoutId={reduceMotion ? undefined : 'nav-active-underline'}
+            style={{
+              position: 'absolute',
+              bottom: '4px',
+              height: '1px',
+              background: 'var(--accent)',
+              willChange: 'transform',
+              left: underlineRect.left,
+              width: underlineRect.width,
+              opacity: underlineRect.opacity,
+            }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+          />
         </div>
 
         <button
@@ -275,6 +316,6 @@ export default function Nav() {
       </AnimatePresence>
 
       <style>{STYLE_TAG}</style>
-    </>
+    </LayoutGroup>
   );
 }

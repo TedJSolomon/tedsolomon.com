@@ -52,14 +52,20 @@ body:has(nav.site-nav) {
   --text: var(--bone);
   --text-bright: var(--bone);
   --accent: #5EC8DB;
+  background-color: var(--void);
 }
 
 /* Reserves the scrollbar gutter so a page transition that changes content
    height (and therefore whether a scrollbar is present) never shifts the
    viewport width. Scoped to the public Nav the same way as the palette
-   above — dashboard/login keep their existing (unreserved) gutter. */
+   above — dashboard/login keep their existing (unreserved) gutter.
+   background-color + color-scheme are set here too (not just on body) so
+   any gap revealed during a route transition — and the browser's own
+   overscroll/scrollbar chrome — is void, never a white flash. */
 html:has(nav.site-nav) {
   scrollbar-gutter: stable;
+  background-color: var(--void);
+  color-scheme: dark;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -3,6 +3,7 @@ import './globals.css';
 import SmoothScroll from './components/SmoothScroll';
 import PageTransition from './components/PageTransition';
 import ScrollProgressBar from './components/ScrollProgressBar';
+import Nav from './components/Nav';
 
 const dmSerifDisplay = DM_Serif_Display({
   subsets: ['latin'],
@@ -41,6 +42,7 @@ export default function RootLayout({ children }) {
       className={`${dmSerifDisplay.variable} ${jetbrainsMono.variable} ${outfit.variable}`}
     >
       <body>
+        <Nav />
         <ScrollProgressBar />
         <SmoothScroll>
           <PageTransition>{children}</PageTransition>

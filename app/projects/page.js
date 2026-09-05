@@ -1,4 +1,3 @@
-import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import LongIslandEmpireSection from '../components/LongIslandEmpireSection';
 
@@ -10,7 +9,6 @@ export const metadata = {
 export default function Projects() {
   return (
     <>
-      <Nav />
 
       <div className="page-hero">
         <div className="page-hero-tag">Projects</div>

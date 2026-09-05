@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
 import MeetingSetup from './MeetingSetup';
 import LiveTicker from './LiveTicker';
@@ -38,7 +37,6 @@ export default function MeetingCostCalculator() {
 
   return (
     <>
-      <Nav />
       <div className="mcc-page">
         <div className="mcc-hero">
           <div className="mcc-hero-eyebrow">

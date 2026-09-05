@@ -1,4 +1,3 @@
-import Nav from './components/Nav';
 import Footer from './components/Footer';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
@@ -14,7 +13,6 @@ export const metadata = {
 export default function Home() {
   return (
     <>
-      <Nav />
 
       <Hero />
 
