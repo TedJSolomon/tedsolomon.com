@@ -103,7 +103,7 @@ const TOOLKIT = [
 const OFF_THE_CLOCK = [
   { label: 'New Dad', body: 'Most of my free time is currently spoken for.' },
   { label: 'Mets', body: 'Optimism, annually renewed.' },
-  { label: 'Golf', body: "Less often than I'd like. Worse than I'd admit." },
+  { label: 'Golf', body: 'Halfway decent. Not out enough.' },
   { label: 'Reading', body: 'Sci-fi and fantasy, mostly.' },
 ];
 
