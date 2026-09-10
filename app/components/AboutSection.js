@@ -1,17 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import {
-  motion,
-  useInView,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from 'motion/react';
+import { useState } from 'react';
+import Link from 'next/link';
 import Reveal from './Reveal';
-
-const EASE = [0.22, 1, 0.36, 1];
+import Timeline from './Timeline';
 
 const TIMELINE = [
   {
@@ -68,9 +60,6 @@ const STYLE_TAG = `
   flex: 0 0 50%;
   min-width: 0;
 }
-.about-timeline {
-  --timeline-offset: 40px;
-}
 .about-stats {
   gap: 2rem;
 }
@@ -87,9 +76,6 @@ const STYLE_TAG = `
     flex: 1 1 auto;
     width: 100%;
   }
-  .about-timeline {
-    --timeline-offset: 26px;
-  }
   .about-stats {
     justify-content: space-between;
     gap: 1.5rem;
@@ -97,117 +83,8 @@ const STYLE_TAG = `
 }
 `;
 
-function TimelineEntry({ entry, reduceMotion }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { margin: '0px 0px -45% 0px', once: true });
-  const activated = reduceMotion || inView;
-
-  return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 'calc(-1 * var(--timeline-offset) - 4.5px)',
-          top: '4px',
-          width: '9px',
-          height: '9px',
-          borderRadius: '50%',
-          background: 'var(--void)',
-          border: `2px solid ${activated ? 'var(--accent)' : 'var(--steel)'}`,
-          boxShadow: activated ? '0 0 12px rgba(94,200,219,0.5)' : 'none',
-          transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
-        }}
-      />
-      <motion.div
-        initial={{ opacity: 0.4, x: 12 }}
-        animate={{ opacity: activated ? 1 : 0.4, x: activated ? 0 : 12 }}
-        transition={reduceMotion ? { duration: 0 } : { duration: 0.5, ease: EASE }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontFamily: 'var(--font-jetbrains-mono), monospace',
-            fontSize: '11px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.14em',
-            color: 'var(--muted)',
-          }}
-        >
-          {entry.period}
-          {entry.current && (
-            <span
-              style={{
-                fontFamily: 'var(--font-jetbrains-mono), monospace',
-                fontSize: '10px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: 'var(--accent)',
-                background: 'rgba(94,200,219,0.10)',
-                padding: '3px 7px',
-                borderRadius: '2px',
-              }}
-            >
-              Current
-            </span>
-          )}
-        </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-outfit), sans-serif',
-            fontSize: '1.15rem',
-            fontWeight: 500,
-            color: 'var(--bone)',
-            marginTop: '6px',
-          }}
-        >
-          {entry.role}
-        </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-jetbrains-mono), monospace',
-            fontSize: '12px',
-            color: 'var(--muted)',
-            marginTop: '4px',
-          }}
-        >
-          {entry.org}
-        </div>
-        <p
-          style={{
-            fontFamily: 'var(--font-outfit), sans-serif',
-            fontSize: '14px',
-            lineHeight: 1.6,
-            color: 'var(--bone)',
-            opacity: 0.55,
-            maxWidth: '44ch',
-            marginTop: '10px',
-          }}
-        >
-          {entry.note}
-        </p>
-      </motion.div>
-    </div>
-  );
-}
-
 export default function AboutSection() {
-  const rawReducedMotion = useReducedMotion();
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    setReduceMotion(!!rawReducedMotion);
-  }, [rawReducedMotion]);
-
-  const timelineRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: timelineRef,
-    offset: ['start 0.75', 'end 0.35'],
-  });
-  const rawScaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
-  const scaleY = useSpring(rawScaleY, { stiffness: 100, damping: 30 });
+  const [storyHover, setStoryHover] = useState(false);
 
   return (
     <section
@@ -290,6 +167,36 @@ export default function AboutSection() {
                 solves them. The industry may change — the approach doesn&apos;t.
               </p>
 
+              <Link
+                href="/about"
+                onMouseEnter={() => setStoryHover(true)}
+                onMouseLeave={() => setStoryHover(false)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginTop: '1.25rem',
+                  fontFamily: 'var(--font-jetbrains-mono), monospace',
+                  fontSize: '12px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.14em',
+                  color: 'var(--accent)',
+                  textDecoration: 'none',
+                }}
+              >
+                Read the full story
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: 'inline-block',
+                    transform: storyHover ? 'translate(4px, -4px)' : 'translate(0, 0)',
+                    transition: 'transform 0.3s ease',
+                  }}
+                >
+                  ↗
+                </span>
+              </Link>
+
               <div
                 className="about-stats"
                 style={{ display: 'flex', alignItems: 'flex-start', marginTop: '32px' }}
@@ -339,43 +246,7 @@ export default function AboutSection() {
         </div>
 
         <div className="about-timeline-col">
-          <div
-            ref={timelineRef}
-            className="about-timeline"
-            style={{ position: 'relative', marginLeft: 'var(--timeline-offset)' }}
-          >
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                left: 'calc(-1 * var(--timeline-offset))',
-                top: 0,
-                bottom: 0,
-                width: '1px',
-                background: 'var(--steel)',
-              }}
-            />
-            <motion.div
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                left: 'calc(-1 * var(--timeline-offset))',
-                top: 0,
-                bottom: 0,
-                width: '1px',
-                background: 'var(--accent)',
-                transformOrigin: 'top',
-                willChange: 'transform, opacity',
-                ...(reduceMotion ? { scaleY: 1 } : { scaleY }),
-              }}
-            />
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '56px' }}>
-              {TIMELINE.map((entry) => (
-                <TimelineEntry key={`${entry.role}-${entry.org}`} entry={entry} reduceMotion={reduceMotion} />
-              ))}
-            </div>
-          </div>
+          <Timeline entries={TIMELINE} detailed={false} />
         </div>
       </div>
 
