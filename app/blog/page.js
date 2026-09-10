@@ -1,4 +1,5 @@
 import Footer from '../components/Footer';
+import BlogSection from '../components/BlogSection';
 
 export const metadata = {
   title: 'Blog — Ted Solomon',
@@ -9,13 +10,7 @@ export const metadata = {
 export default function Blog() {
   return (
     <>
-
-      <section className="coming-soon">
-        <div className="coming-soon-tag">Blog</div>
-        <h1>Coming Summer 2026</h1>
-        <p>Thoughts on product, building, and figuring it out along the way.</p>
-      </section>
-
+      <BlogSection />
       <Footer />
     </>
   );
