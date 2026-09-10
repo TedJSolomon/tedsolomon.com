@@ -1,5 +1,6 @@
 import Footer from '../components/Footer';
 import AboutPageContent from '../components/AboutPageContent';
+import InteriorPageFade from '../components/InteriorPageFade';
 
 export const metadata = {
   title: 'About — Ted Solomon',
@@ -10,7 +11,9 @@ export const metadata = {
 export default function About() {
   return (
     <>
-      <AboutPageContent />
+      <InteriorPageFade>
+        <AboutPageContent />
+      </InteriorPageFade>
       <Footer />
     </>
   );

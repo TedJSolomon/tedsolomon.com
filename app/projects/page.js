@@ -1,5 +1,6 @@
 import Footer from '../components/Footer';
 import LongIslandEmpireSection from '../components/LongIslandEmpireSection';
+import InteriorPageFade from '../components/InteriorPageFade';
 
 export const metadata = {
   title: 'Projects — Ted Solomon',
@@ -9,6 +10,7 @@ export const metadata = {
 export default function Projects() {
   return (
     <>
+      <InteriorPageFade>
 
       <div className="page-hero">
         <div className="page-hero-tag">Projects</div>
@@ -85,6 +87,7 @@ export default function Projects() {
 
       <LongIslandEmpireSection />
 
+      </InteriorPageFade>
       <Footer />
     </>
   );

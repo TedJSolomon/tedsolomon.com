@@ -1,5 +1,6 @@
 import Footer from '../components/Footer';
 import BlogSection from '../components/BlogSection';
+import InteriorPageFade from '../components/InteriorPageFade';
 
 export const metadata = {
   title: 'Blog — Ted Solomon',
@@ -10,7 +11,9 @@ export const metadata = {
 export default function Blog() {
   return (
     <>
-      <BlogSection />
+      <InteriorPageFade>
+        <BlogSection />
+      </InteriorPageFade>
       <Footer />
     </>
   );

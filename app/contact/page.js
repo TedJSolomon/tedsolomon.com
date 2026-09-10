@@ -1,5 +1,6 @@
 import Footer from '../components/Footer';
 import ContactSection from '../components/ContactSection';
+import InteriorPageFade from '../components/InteriorPageFade';
 
 export const metadata = {
   title: 'Contact — Ted Solomon',
@@ -10,7 +11,9 @@ export const metadata = {
 export default function Contact() {
   return (
     <>
-      <ContactSection />
+      <InteriorPageFade>
+        <ContactSection />
+      </InteriorPageFade>
       <Footer />
     </>
   );

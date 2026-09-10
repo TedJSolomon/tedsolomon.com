@@ -7,6 +7,12 @@ import HeroStatusPanel from './HeroStatusPanel';
 
 const EASE = [0.22, 1, 0.36, 1];
 
+// Module-level (not state, not localStorage) so it persists across
+// client-side navigations within the same session but resets on a hard
+// refresh, when the whole module re-executes. The entrance should only
+// ever play once per session, the first time the hero mounts.
+let heroHasEntered = false;
+
 const KEYFRAMES = `
 @keyframes heroSheen {
   0%   { background-position: -80% 0, 0 0; }
@@ -99,6 +105,15 @@ export default function Hero() {
   const [ghostHover, setGhostHover] = useState(false);
   const [hoveredIcon, setHoveredIcon] = useState(null);
 
+  // Captures (and flips) the flag exactly once, at this mount's initial
+  // state computation — later re-renders of this same instance reuse the
+  // already-computed value.
+  const [playEntrance] = useState(() => {
+    const isFirstEntrance = !heroHasEntered;
+    heroHasEntered = true;
+    return isFirstEntrance;
+  });
+
   useEffect(() => {
     setReduceMotion(!!rawReducedMotion);
   }, [rawReducedMotion]);
@@ -117,11 +132,15 @@ export default function Hero() {
   // clamp correctly for a sub-range of scrollYProgress like this one.
   const scrollCueOpacity = useTransform(scrollYProgress, (v) => Math.max(0, 1 - v / 0.2));
 
+  // No stagger/entrance on a mount that isn't this session's first — the
+  // hero should just already be there, same as the reduced-motion case.
+  const skipEntrance = reduceMotion || !playEntrance;
+
   function entranceProps(key) {
     return {
       initial: { opacity: 0, y: 20, filter: 'blur(6px)' },
       animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
-      transition: reduceMotion
+      transition: skipEntrance
         ? { duration: 0 }
         : { duration: 0.8, delay: ENTRANCE_DELAYS[key], ease: EASE },
     };
@@ -434,7 +453,7 @@ export default function Hero() {
             <div className="hero-panel-col" style={{ flex: '1 1 34%', display: 'flex' }}>
               <HeroStatusPanel
                 key={reduceMotion ? 'reduced' : 'motion'}
-                reduceMotion={reduceMotion}
+                reduceMotion={skipEntrance}
               />
             </div>
           </div>
