@@ -3,7 +3,7 @@
 _Last updated: 2026-09-27 by orchestrator_
 
 ## Now
-- _dashboard-auth_ — branch `feature/dashboard-auth` (off `chore/adopt-team`) — stage: Build (Gate 1 approved; Gate 3 not needed) — PRD `docs/prd/dashboard-auth.md` ([Asana](https://app.asana.com/1/201180046394194/project/1218933205708679/task/1218931003822837)). Design skipped (backend-only, login UX unchanged).
+- _dashboard-auth_ — branch `feature/dashboard-auth` (off `chore/adopt-team`) — stage: QA (build done: session lib, middleware, login/logout, logout button) — PRD `docs/prd/dashboard-auth.md` ([Asana](https://app.asana.com/1/201180046394194/project/1218933205708679/task/1218931003822837)). Design skipped (backend-only, login UX unchanged).
 - _adopt-team_ — branch `chore/adopt-team` — stage: PR — onboarding docs (CLAUDE.md, STATUS.md, docs folders)
 
 ## Waiting on CEO
