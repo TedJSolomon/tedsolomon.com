@@ -423,6 +423,61 @@
 }
 
 /* ──────────────────────────────────────────────────
+   LOGOUT CONTROL
+   Fixed, understated, present on every dashboard route
+   at every breakpoint — independent of the statusbar
+   (hidden below 600px) and sidebar (off-canvas on mobile).
+   ────────────────────────────────────────────────── */
+.db-logout-form {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 210;
+}
+
+.db-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #a7b1bd;
+  background: rgba(8, 8, 11, 0.85);
+  border: 1px solid rgba(122, 135, 152, 0.35);
+  border-radius: 6px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.db-logout-btn:hover {
+  color: #e8a838;
+  border-color: rgba(232, 168, 56, 0.5);
+  background: rgba(8, 8, 11, 0.95);
+}
+
+.db-logout-btn:focus-visible {
+  color: #e8a838;
+  border-color: rgba(232, 168, 56, 0.5);
+  outline: 2px solid #e8a838;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .db-logout-form { bottom: 0.75rem; right: 0.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-logout-btn { transition: none; }
+}
+
+/* ──────────────────────────────────────────────────
    AMBIENT PULSE LINE
    Pure CSS @keyframes — zero JavaScript. Persists on
    every hard refresh. Fixed just below the status bar.
