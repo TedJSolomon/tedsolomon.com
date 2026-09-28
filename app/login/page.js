@@ -1,13 +1,16 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { Suspense, useActionState, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { login } from './actions';
 
 const initialState = { error: null };
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, formAction, pending] = useActionState(login, initialState);
   const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from') || '';
 
   return (
     <div className="login-page">
@@ -17,6 +20,7 @@ export default function LoginPage() {
         <p className="login-subtext">Enter the password to access the dashboard.</p>
 
         <form action={formAction} className="login-form">
+          <input type="hidden" name="from" value={from} />
           <div className="login-field">
             <label className="login-label" htmlFor="password">
               Password
@@ -79,5 +83,13 @@ export default function LoginPage() {
         </svg>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

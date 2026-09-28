@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
+import { SESSION_COOKIE, verifySessionToken } from './app/lib/session';
 
-export function middleware(request) {
-  const authToken = request.cookies.get('auth-token');
-  const secret = process.env.DASHBOARD_SECRET;
+export async function middleware(request) {
+  const authToken = request.cookies.get(SESSION_COOKIE);
+  const session = authToken ? await verifySessionToken(authToken.value) : null;
 
-  if (!authToken || !secret || authToken.value !== secret) {
+  if (!session) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);

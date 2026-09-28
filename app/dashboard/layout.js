@@ -1,6 +1,7 @@
 import './dashboard.css';
 import DashboardSidebar from '../components/DashboardSidebar';
 import StatusBar from './StatusBar';
+import { logout } from '../login/actions';
 
 export const metadata = {
   title: 'Dashboard — Ted Solomon',
@@ -19,6 +20,14 @@ export default function DashboardLayout({ children }) {
           {children}
         </main>
       </div>
+      {/* Fixed, understated logout control — present on every dashboard route
+          and every breakpoint, independent of the statusbar (hidden on mobile)
+          and sidebar (hidden off-canvas on mobile). Works without JS. */}
+      <form action={logout} className="db-logout-form">
+        <button type="submit" className="db-logout-btn">
+          Log out
+        </button>
+      </form>
     </>
   );
 }
