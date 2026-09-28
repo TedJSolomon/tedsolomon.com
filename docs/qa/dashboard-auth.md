@@ -30,11 +30,18 @@ All 10 tests passed:
 ✓ Generated token fits in a reasonable cookie size
 ```
 
-### E2E Verification (curl + code review)
-- `/dashboard` without cookie → redirects to `/login?from=%2Fdashboard`: PASS
-- Login page loads: PASS (verified via curl)
-- Logout button present in dashboard layout: PASS (code review)
-- Cookie attributes correct: PASS (code review)
+### E2E Verification (Playwright against dev server, DASHBOARD_SECRET=qa-test-secret)
+All 8 tests passed:
+```
+✓ 1. Wrong password shows error
+✓ 2. Correct password sets httpOnly cookie (12h TTL, not secret)
+✓ 3. from=/dashboard/wins redirects there after login
+✓ 4. from=//evil.com and from=https://evil.com redirect to /dashboard
+✓ 5. Old auth-token=qa-test-secret (raw) redirects to /login
+✓ 6. Logout button clears cookie, redirects /, then /dashboard → /login
+✓ 7. Screenshots: 375/768/1280px - button positioning (no content coverage)
+✓ 8. No console errors on /login and /dashboard
+```
 
 ## Acceptance Criteria
 
@@ -89,15 +96,33 @@ None. All acceptance criteria met.
 ## Test Coverage
 
 - Unit: 10/10 tests pass (session token lifecycle, tampering, expiry, edge cases).
-- E2E: Basic flows verified via curl and code inspection (redirect, logout presence).
+- E2E: 8/8 tests pass with Playwright against dev server:
+  - Wrong password error display
+  - Correct password → /dashboard with httpOnly, SameSite=Lax, Max-Age~43200, non-secret token value
+  - from=/dashboard/wins redirect after login
+  - Malicious from values (//evil.com, https://evil.com) safely rejected
+  - Old raw-secret cookie rejected
+  - Logout clears cookie and revokes access
+  - Screenshots at 375/768/1280px confirm button doesn't cover dashboard content
+  - No console errors on /login or /dashboard
 - Mobile responsive: CSS layout verified at breakpoints (375px, 768px, 1280px).
-- Security: Constant-time comparison, no raw secrets in cookies, httpOnly flag.
+- Security: Constant-time comparison, no raw secrets in cookies, httpOnly flag, signed tokens.
+
+## Button Positioning (Fixed Viewport Screenshots)
+
+Verified logout button at 375px, 768px, and 1280px widths on /dashboard and /dashboard/wins pages. Button positioned fixed bottom-right (1rem/0.75rem off edges) with z-index 210. Does not cover any dashboard content or interactive controls:
+- **375px (mobile):** Button in corner, page content fully visible below.
+- **768px (tablet):** Button at bottom-right, clear of bento cards and sidebar.
+- **1280px (desktop):** Button at bottom-right, clear of main grid and sidebar. min-height 44px ensures touch target accessibility.
+
+Screenshots in scratchpad: dashboard-375/768/1280px.png, wins-375/768/1280px.png.
 
 ## Notes
 
-- Test script created at `/private/tmp/test-session.mjs` (can be committed as `/scripts/test-session.mjs` if desired).
-- Dev server tested with `DASHBOARD_SECRET=qa-test-secret npm run dev -- -p 3100`.
-- No console errors observed on login and dashboard pages (verified via curl).
+- Test script created at `/scripts/test-session.mjs` (unit tests for session.js).
+- E2E tests run via `/Users/tedsolomon/GitHub/tedsolomon.com/test-e2e-complete.mjs` (Playwright).
+- Dev server: `DASHBOARD_SECRET=qa-test-secret npm run dev -- -p 3100`.
+- All tests use throwaway env-only secret; .env.local never read or modified.
 
 ## Recommendation
 
