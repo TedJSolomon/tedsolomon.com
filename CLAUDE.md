@@ -11,7 +11,7 @@
 ## Links
 - Repo: https://github.com/TedJSolomon/tedsolomon.com
 - Production: https://tedsolomon.com · Vercel project: `tedsolomon-com`
-- Asana project: _none yet. CEO to create one later (see STATUS.md)._
+- Asana project: [tedsolomon.com — Website](https://app.asana.com/1/201180046394194/project/1218933205708679) (sections: Backlog → Spec → Design → Build → QA/Security → In Review → Done)
 - Supabase SQL editor (manual DDL): https://supabase.com/dashboard/project/yzgfpteoyyubfmmlixbz/sql
 
 ## Stack & conventions
