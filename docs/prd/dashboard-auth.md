@@ -66,3 +66,9 @@ The dashboard auth currently stores the raw `DASHBOARD_SECRET` in the browser co
 - **Signing algorithm**: HMAC-SHA256 is sufficient for a single-user personal dashboard. No need for asymmetric keys.
 - **Token storage**: not in localStorage; cookie only. HttpOnly prevents XSS leakage.
 - **Logout redirection**: After logout, redirect to `/` (home) or `/login`. Recommend `/` for UX (logged-out user lands on public site).
+
+## CEO decisions (Gate 1, 2026-09-27)
+- **TTL: 12 hours** (option c). Cookie maxAge matches the token expiry.
+- **Signing key: reuse `DASHBOARD_SECRET`**, deriving a separate HMAC key from it (for example HMAC-SHA256(DASHBOARD_SECRET, "dashboard-session-v1")). No new env var. Changing the password invalidates all sessions.
+- **Logout: clear the cookie only**, with no server-side table. The short TTL limits how long a copied token stays useful. No manual Supabase work.
+- These decisions override any conflicting lines above (7-day TTL, `SESSION_SECRET`).

@@ -3,11 +3,10 @@
 _Last updated: 2026-09-27 by orchestrator_
 
 ## Now
-- _dashboard-auth_ — branch `feature/dashboard-auth` (off `chore/adopt-team`) — stage: Spec done, waiting on Gate 1 — PRD `docs/prd/dashboard-auth.md` ([Asana](https://app.asana.com/1/201180046394194/project/1218933205708679/task/1218931003822837)). Design skipped (backend-only, login UX unchanged).
+- _dashboard-auth_ — branch `feature/dashboard-auth` (off `chore/adopt-team`) — stage: Build (Gate 1 approved; Gate 3 not needed) — PRD `docs/prd/dashboard-auth.md` ([Asana](https://app.asana.com/1/201180046394194/project/1218933205708679/task/1218931003822837)). Design skipped (backend-only, login UX unchanged).
 - _adopt-team_ — branch `chore/adopt-team` — stage: PR — onboarding docs (CLAUDE.md, STATUS.md, docs folders)
 
 ## Waiting on CEO
-- 🛑 Gate 1 for _dashboard-auth_ — approve scope + answer the 3 open questions (TTL, signing key, logout revocation)
 - 🛑 Gate 4 for _adopt-team_ — review and merge the onboarding PR
 
 ## Next up
@@ -33,6 +32,7 @@ _Last updated: 2026-09-27 by orchestrator_
 - `npm run build` passes (Next 16.2.4, 28 routes).
 
 ## Decisions log
+- 2026-09-27 — dashboard-auth: 12h HMAC-signed session token, key derived from DASHBOARD_SECRET, logout clears cookie (no DB table) — CEO wants zero manual work; single user
 - 2026-09-27 — Created Asana project "tedsolomon.com — Website"; one task per Next up item, moved through sections as work progresses — keep Asana and STATUS.md in sync
 - 2026-09-27 — Adopted the project under the agent team — standard pipeline from here on
 - 2026-09-27 — void/chrome is the working design system (mostly locked, changes via Gate 2) — CEO preference
