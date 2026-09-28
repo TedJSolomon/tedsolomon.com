@@ -3,10 +3,11 @@
 _Last updated: 2026-09-27 by orchestrator_
 
 ## Now
-- _dashboard-auth_ — branch `feature/dashboard-auth` (off `chore/adopt-team`) — stage: Security (QA PASS — docs/qa/dashboard-auth.md) — PRD `docs/prd/dashboard-auth.md` ([Asana](https://app.asana.com/1/201180046394194/project/1218933205708679/task/1218931003822837)). Design skipped (backend-only, login UX unchanged).
+- _dashboard-auth_ — branch `feature/dashboard-auth` (off `chore/adopt-team`) — stage: PR (QA PASS, security CLEAR WITH NOTES) — PRD `docs/prd/dashboard-auth.md` ([Asana](https://app.asana.com/1/201180046394194/project/1218933205708679/task/1218931003822837)). Design skipped (backend-only, login UX unchanged).
 - _adopt-team_ — branch `chore/adopt-team` — stage: PR — onboarding docs (CLAUDE.md, STATUS.md, docs folders)
 
 ## Waiting on CEO
+- 🛑 Gate 4 for _dashboard-auth_ — review preview + merge PR (merge the adopt-team PR first)
 - 🛑 Gate 4 for _adopt-team_ — review and merge the onboarding PR
 
 ## Next up
@@ -23,6 +24,8 @@ _Last updated: 2026-09-27 by orchestrator_
 - 2026-05 — Meeting Cost Calculator phases 0–3
 
 ## Known issues
+- `/api/calendar/events` returns personal calendar data with no auth, and `/api/auth/google/*` (incl. disconnect) look unguarded; not covered by the `/dashboard/:path*` matcher — High — `app/api/`
+- Login has no rate limiting (brute-force) — Medium — `app/login/actions.js`
 - `npm run lint` fails with "Invalid project directory … /lint" because `next lint` was removed in Next 16 and there's no ESLint config — Medium — `package.json`
 - `npm audit`: 6 vulnerabilities (1 critical, 4 high, 1 moderate) — High — dependencies
 - Build warns that the `middleware` file convention is deprecated, so it should use `proxy` — Low — `middleware.js`
